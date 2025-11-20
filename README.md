@@ -13,6 +13,7 @@
 - 🔄 **可逆转换**：支持将匿名化文本还原为原始内容
 - 🎯 **精准识别**：支持多种实体类型（人名、联系方式、地址、IP 等）
 - 🌐 **灵活配置**：支持自定义 LLM API endpoint（兼容 OpenAI API）
+- 🖥️ **CLI + Web API**：同时支持命令行工具和 HTTP API 服务
 
 ## 📦 安装
 
@@ -100,6 +101,124 @@ inu restore --file anonymized.txt --entities entities.yaml --output restored.txt
 inu restore --file anonymized.txt --entities entities.yaml --print --output restored.txt
 ```
 
+### Web API 使用
+
+#### 启动 Web 服务器
+
+```bash
+inu web --admin-token your-secret-token
+```
+
+使用自定义地址和端口：
+```bash
+inu web --addr 0.0.0.0:9090 --admin-user admin --admin-token your-secret-token
+```
+
+服务器启动后，可以通过 HTTP API 进行匿名化和还原操作。
+
+#### API 端点
+
+**健康检查（无需认证）**
+```bash
+curl http://localhost:8080/health
+```
+
+响应：
+```json
+{
+  "status": "ok",
+  "version": "v0.1.0"
+}
+```
+
+**匿名化文本（需要认证）**
+```bash
+curl -X POST http://localhost:8080/api/v1/anonymize \
+  -u admin:your-secret-token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "张三的电话是 13800138000"
+  }'
+```
+
+响应：
+```json
+{
+  "anonymized_text": "<个人信息[0].姓名.张三>的电话是<个人信息[1].电话.13800138000>",
+  "entities": [
+    {
+      "key": "<个人信息[0].姓名.张三>",
+      "type": "个人信息",
+      "id": "0",
+      "category": "姓名",
+      "detail": "张三",
+      "values": ["张三"]
+    },
+    {
+      "key": "<个人信息[1].电话.13800138000>",
+      "type": "个人信息",
+      "id": "1",
+      "category": "电话",
+      "detail": "13800138000",
+      "values": ["13800138000"]
+    }
+  ]
+}
+```
+
+**指定实体类型**
+```bash
+curl -X POST http://localhost:8080/api/v1/anonymize \
+  -u admin:your-secret-token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "张三在 ABC 公司工作",
+    "entity_types": ["个人信息"]
+  }'
+```
+
+**还原文本（需要认证）**
+```bash
+curl -X POST http://localhost:8080/api/v1/restore \
+  -u admin:your-secret-token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "anonymized_text": "<个人信息[0].姓名.张三>的电话是<个人信息[1].电话.13800138000>",
+    "entities": [
+      {
+        "key": "<个人信息[0].姓名.张三>",
+        "values": ["张三"]
+      },
+      {
+        "key": "<个人信息[1].电话.13800138000>",
+        "values": ["13800138000"]
+      }
+    ]
+  }'
+```
+
+响应：
+```json
+{
+  "restored_text": "张三的电话是 13800138000"
+}
+```
+
+#### 身份认证
+
+所有 `/api/v1/*` 端点都需要 HTTP Basic Authentication。使用 `-u username:password` 或设置 `Authorization` 头：
+
+```bash
+# 方式 1：使用 -u 参数
+curl -u admin:your-secret-token http://localhost:8080/api/v1/anonymize ...
+
+# 方式 2：使用 Authorization 头
+curl -H "Authorization: Basic $(echo -n 'admin:your-secret-token' | base64)" \
+  http://localhost:8080/api/v1/anonymize ...
+```
+
+**注意**：生产环境中建议使用 HTTPS 保护认证信息。
+
 ### 编程接口
 
 ```go
@@ -172,10 +291,13 @@ Inu 默认识别以下类型的敏感信息：
 ```
 inu/
 ├── cmd/inu/               # CLI 入口
-│   └── commands/          # CLI 子命令（anonymize, restore）
+│   └── commands/          # CLI 子命令（anonymize, restore, web）
 ├── pkg/
 │   ├── anonymizer/        # 核心匿名化逻辑
-│   └── cli/               # CLI 工具函数（输入输出、实体管理）
+│   ├── cli/               # CLI 工具函数（输入输出、实体管理）
+│   └── web/               # Web API 服务器
+│       ├── handlers/      # HTTP handlers（anonymize, restore, health）
+│       └── middleware/    # 认证中间件
 ├── bin/                   # 编译产物（不提交）
 ├── openspec/              # OpenSpec 规范和变更提案
 └── .github/               # GitHub Actions workflows
@@ -213,6 +335,8 @@ make lint
 - [x] 多种输入方式（文件、命令行参数、标准输入）
 - [x] 实体 YAML 文件管理
 - [x] CI/CD 自动化构建和发布
+- [x] Web API 服务（`inu web`）
+- [x] HTTP 身份认证
 - [ ] Web 界面
 - [ ] 支持更多 LLM 提供商
 - [ ] 批量文件处理

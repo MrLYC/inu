@@ -14,6 +14,7 @@ Inu 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够
 - **AI 框架**: CloudWeGo Eino（用于 LLM 交互）
 - **LLM 提供商**: OpenAI API（支持自定义 base URL）
 - **CLI 框架**: Cobra（命令行解析）+ Viper（配置管理）
+- **Web 框架**: Gin（HTTP API 服务器）
 - **构建工具**: Make, Go toolchain
 - **CI/CD**: GitHub Actions
 - **版本管理**: Git tags (vX.Y.Z)
@@ -30,12 +31,14 @@ Inu 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够
 ### Architecture Patterns
 - **项目结构**:
   - `cmd/inu/`: CLI 入口点
-  - `cmd/inu/commands/`: CLI 子命令实现（anonymize, restore）
+  - `cmd/inu/commands/`: CLI 子命令实现（anonymize, restore, web）
   - `pkg/anonymizer/`: 核心业务逻辑
   - `pkg/cli/`: CLI 工具函数（输入输出、实体管理）
+  - `pkg/web/`: Web API 服务器（handlers, middleware, server）
   - `bin/`: 编译产物输出目录（不提交到版本控制）
   - `openspec/`: OpenSpec 规范和变更提案
 - **CLI 架构**: 使用 Cobra 构建子命令结构，Viper 处理配置文件
+- **Web 架构**: 使用 Gin 框架提供 RESTful API，支持 HTTP Basic Auth
 - **依赖注入**: 构造函数模式（如 `NewHas`）
 - **错误处理**: 统一使用 eris 进行错误包装和追踪
 
@@ -80,6 +83,12 @@ Inu 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够
   - 输入：`--file` / `--content` / stdin
   - 实体：`--entities` (必需)
   - 输出：`--print` 和/或 `--output`
+- `inu web`: 启动 Web API 服务器
+  - 配置：`--addr` (监听地址), `--admin-user`, `--admin-token`
+  - API 端点：
+    - `GET /health` - 健康检查（无需认证）
+    - `POST /api/v1/anonymize` - 匿名化文本（需要认证）
+    - `POST /api/v1/restore` - 还原文本（需要认证）
 
 ## Important Constraints
 - 依赖外部 LLM API（OpenAI 或兼容服务）
@@ -92,3 +101,4 @@ Inu 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够
 - **Cobra**: CLI 命令行框架
 - **Viper**: 配置和 YAML 文件管理
 - **Eris**: Go 错误处理增强
+- **Gin**: Web 框架（HTTP API 服务器）

@@ -25,3 +25,9 @@ type Entity struct {
 	Detail     string   `json:"detail"`
 	Values     []string `json:"values"`
 }
+
+// DefaultEntityTypes are the default entity types used when none are specified
+var DefaultEntityTypes = []string{
+	"个人信息", "业务信息", "资产信息", "账户信息",
+	"位置数据", "文档名称", "组织机构", "岗位称谓",
+}

@@ -35,11 +35,6 @@ var (
 	anonymizeOutputEntities string
 )
 
-var defaultEntityTypes = []string{
-	"个人信息", "业务信息", "资产信息", "账户信息",
-	"位置数据", "文档名称", "组织机构", "岗位称谓",
-}
-
 // NewAnonymizeCmd creates the anonymize command.
 func NewAnonymizeCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -50,13 +45,14 @@ The anonymized entities can be saved to a YAML file for later restoration.`,
 		RunE: runAnonymize,
 	}
 
-	cmd.Flags().StringVarP(&anonymizeFile, "file", "f", "", "Read input from file")
-	cmd.Flags().StringVarP(&anonymizeContent, "content", "c", "", "Input content as string")
-	cmd.Flags().StringSliceVarP(&anonymizeEntityTypes, "entity-types", "t", nil, "Entity types to detect (comma-separated)")
-	cmd.Flags().BoolVarP(&anonymizePrint, "print", "p", false, "Print anonymized text to stdout")
-	cmd.Flags().BoolVar(&anonymizePrintEntities, "print-entities", false, "Print entities in simplified format to stdout")
-	cmd.Flags().StringVarP(&anonymizeOutput, "output", "o", "", "Write anonymized text to file")
-	cmd.Flags().StringVarP(&anonymizeOutputEntities, "output-entities", "e", "", "Write entities to YAML file")
+	flags := cmd.Flags()
+	flags.StringVarP(&anonymizeFile, "file", "f", "", "Read input from file")
+	flags.StringVarP(&anonymizeContent, "content", "c", "", "Input content as string")
+	flags.StringSliceVarP(&anonymizeEntityTypes, "entity-types", "t", anonymizer.DefaultEntityTypes, "Entity types to detect (comma-separated)")
+	flags.BoolVarP(&anonymizePrint, "print", "p", false, "Print anonymized text to stdout")
+	flags.BoolVar(&anonymizePrintEntities, "print-entities", false, "Print entities in simplified format to stdout")
+	flags.StringVarP(&anonymizeOutput, "output", "o", "", "Write anonymized text to file")
+	flags.StringVarP(&anonymizeOutputEntities, "output-entities", "e", "", "Write entities to YAML file")
 
 	return cmd
 }
@@ -82,9 +78,6 @@ func runAnonymize(cmd *cobra.Command, args []string) error {
 
 	// Determine entity types
 	entityTypes := anonymizeEntityTypes
-	if len(entityTypes) == 0 {
-		entityTypes = defaultEntityTypes
-	}
 
 	// Initialize LLM
 	cli.ProgressMessage("Initializing LLM client...")
