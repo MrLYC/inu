@@ -13,6 +13,7 @@ Inu 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够
 - **语言**: Go 1.24.4
 - **AI 框架**: CloudWeGo Eino（用于 LLM 交互）
 - **LLM 提供商**: OpenAI API（支持自定义 base URL）
+- **CLI 框架**: Cobra（命令行解析）+ Viper（配置管理）
 - **构建工具**: Make, Go toolchain
 - **CI/CD**: GitHub Actions
 - **版本管理**: Git tags (vX.Y.Z)
@@ -29,9 +30,12 @@ Inu 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够
 ### Architecture Patterns
 - **项目结构**:
   - `cmd/inu/`: CLI 入口点
+  - `cmd/inu/commands/`: CLI 子命令实现（anonymize, restore）
   - `pkg/anonymizer/`: 核心业务逻辑
+  - `pkg/cli/`: CLI 工具函数（输入输出、实体管理）
   - `bin/`: 编译产物输出目录（不提交到版本控制）
   - `openspec/`: OpenSpec 规范和变更提案
+- **CLI 架构**: 使用 Cobra 构建子命令结构，Viper 处理配置文件
 - **依赖注入**: 构造函数模式（如 `NewHas`）
 - **错误处理**: 统一使用 eris 进行错误包装和追踪
 
@@ -51,21 +55,31 @@ Inu 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够
 
 ## Domain Context
 ### 敏感信息类型
-支持识别和匿名化的实体类型包括：
-- 人名
-- 联系方式（电话、邮箱等）
-- 职务
-- 密码
-- 组织名称
-- 地址
-- 文件名
-- 账号
-- 网址
-- IP 地址
+默认支持识别和匿名化的实体类型包括：
+- 个人信息：姓名、身份证号、电话号码等
+- 业务信息：业务数据、客户信息等
+- 资产信息：财产、资源信息等
+- 账户信息：银行账号、信用卡号等
+- 位置数据：地址、地理位置等
+- 文档名称：文件名、文档标题等
+- 组织机构：公司名称、机构名称等
+- 岗位称谓：职位、头衔等
+
+用户可以通过 CLI 参数自定义实体类型。
 
 ### 实体格式
 匿名化后的占位符格式为：`<EntityType[ID].Category.Detail>`
-- 示例：`<人名[0].姓名.张三>`
+- 示例：`<个人信息[0].姓名.张三>`
+
+### CLI 命令
+- `inu anonymize`: 匿名化文本
+  - 输入：`--file` / `--content` / stdin（优先级递减）
+  - 输出：`--print` 和/或 `--output`
+  - 实体：`--output-entities` 保存到 YAML 文件
+- `inu restore`: 还原文本
+  - 输入：`--file` / `--content` / stdin
+  - 实体：`--entities` (必需)
+  - 输出：`--print` 和/或 `--output`
 
 ## Important Constraints
 - 依赖外部 LLM API（OpenAI 或兼容服务）
@@ -75,3 +89,6 @@ Inu 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够
 ## External Dependencies
 - **CloudWeGo Eino**: AI 工具链框架
 - **OpenAI API**: 大语言模型服务（可自定义 endpoint）
+- **Cobra**: CLI 命令行框架
+- **Viper**: 配置和 YAML 文件管理
+- **Eris**: Go 错误处理增强

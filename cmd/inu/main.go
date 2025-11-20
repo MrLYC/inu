@@ -17,46 +17,33 @@
 package main
 
 import (
-	"context"
-	"log"
+	"fmt"
+	"os"
 
-	"github.com/mrlyc/inu/pkg/anonymizer"
+	"github.com/mrlyc/inu/cmd/inu/commands"
+	"github.com/spf13/cobra"
+)
+
+var (
+	// Version information (injected at build time)
+	Version   = "dev"
+	Commit    = "unknown"
+	BuildTime = "unknown"
 )
 
 func main() {
-	ctx := context.Background()
-	llm, err := anonymizer.CreateOpenAIChatModel(ctx)
-	if err != nil {
-		log.Fatalf("create chat model failed, err=%v", err)
+	rootCmd := &cobra.Command{
+		Use:     "inu",
+		Short:   "Text anonymization and restoration tool",
+		Long:    `Inu is a CLI tool for anonymizing sensitive information in text using LLM and restoring it back.`,
+		Version: fmt.Sprintf("%s (commit: %s, built: %s)", Version, Commit, BuildTime),
 	}
 
-	anon, err := anonymizer.New(llm)
-	if err != nil {
-		log.Fatalf("create anonymizer failed, err=%v", err)
+	// Add subcommands
+	rootCmd.AddCommand(commands.NewAnonymizeCmd())
+	rootCmd.AddCommand(commands.NewRestoreCmd())
+
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
 	}
-
-	types := []string{"个人信息", "业务信息", "资产信息", "账户信息", "位置数据", "文档名称", "组织机构", "岗位称谓"}
-	text := `
-	张三的身份证号是 110101199001011234，他的电话号码是 13800138000。 
-	他住在北京市朝阳区。张三的银行账户是 6222021001123456789，电子邮箱是 zhangsan@example.com。
-	他的信用卡号是 4111111111111111，有效期到 12/25，CVV 码是 123。
-	张三在公司 ABC Tech 工作，职位是 软件工程师，员工编号是 E12345。
-	他最近购买了一辆车，车牌号是 京A12345，车型是 特斯拉 Model 3。
-	张三的上级是 李四，职位是 技术经理，张三一般叫他 老李。
-	`
-
-	result, entities, err := anon.AnonymizeText(ctx, types, text)
-	if err != nil {
-		log.Fatalf("anonymize text failed, err=%v", err)
-	}
-
-	log.Printf("anonymize result: %s", result)
-	log.Printf("anonymize mapping: %+v", entities)
-
-	restoredText, err := anon.RestoreText(ctx, entities, result)
-	if err != nil {
-		log.Fatalf("restore text failed, err=%v", err)
-	}
-
-	log.Printf("restored text: %s", restoredText)
 }
