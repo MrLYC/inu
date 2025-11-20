@@ -119,6 +119,20 @@ func (h *Has) AnonymizeText(ctx context.Context, types []string, text string) (s
 	return anonymizedText, entities, nil
 }
 
+// RestoreText restores the original text from the anonymized text using the provided entities.
+func (h *Has) RestoreText(ctx context.Context, entities []*Entity, text string) (string, error) {
+	var replaceMapping []string
+	for _, entity := range entities {
+		if len(entity.Values) == 0 {
+			continue
+		}
+		replaceMapping = append(replaceMapping, entity.Key, entity.Values[0])
+	}
+
+	replacer := strings.NewReplacer(replaceMapping...)
+	return replacer.Replace(text), nil
+}
+
 // NewHas creates a new Has instance.
 func NewHas(chatModel model.BaseChatModel) (*Has, error) {
 	anonymizeTemplate := prompt.FromMessages(schema.FString,
@@ -168,4 +182,11 @@ func main() {
 
 	log.Printf("anonymize result: %s", result)
 	log.Printf("anonymize mapping: %+s", entities)
+
+	restoredText, err := has.RestoreText(ctx, entities, result)
+	if err != nil {
+		log.Fatalf("restore text failed, err=%v", err)
+	}
+
+	log.Printf("restored text: %s", restoredText)
 }
