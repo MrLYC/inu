@@ -1,8 +1,102 @@
 # cli Specification
 
 ## Purpose
-TBD - created by archiving change add-cli-commands. Update Purpose after archive.
+定义 Inu CLI 命令行接口的输出行为规范和命令接口。
 ## Requirements
+
+### Requirement: 命令输出行为
+系统 SHALL 默认将主要输出写入 stdout，将诊断信息写入 stderr。
+
+#### Scenario: 默认输出到 stdout - anonymize
+- **WHEN** 用户执行 `inu anonymize --file input.txt`
+- **THEN** 系统应该将匿名化后的文本输出到 stdout
+- **AND** 不需要指定 `--print` 参数
+
+#### Scenario: 默认输出到 stdout - restore
+- **WHEN** 用户执行 `inu restore --file input.txt --entities e.yaml`
+- **THEN** 系统应该将还原后的文本输出到 stdout
+- **AND** 不需要指定 `--print` 参数
+
+#### Scenario: 实体信息输出到 stderr
+- **WHEN** 用户执行 `inu anonymize --file input.txt`
+- **THEN** 系统应该将识别到的实体信息输出到 stderr
+- **AND** 格式为 `key: values`（每行一个实体）
+- **AND** 不干扰 stdout 的主要输出
+
+#### Scenario: 禁用所有输出
+- **WHEN** 用户执行 `inu anonymize --file input.txt --no-print`
+- **THEN** 系统不应该向 stdout 输出匿名化文本
+- **AND** 系统不应该向 stderr 输出实体信息
+- **AND** 进度信息仍然输出到 stderr
+
+#### Scenario: 同时输出到文件和终端
+- **WHEN** 用户执行 `inu anonymize --file input.txt --output result.txt`
+- **THEN** 系统应该将匿名化文本写入 result.txt
+- **AND** 同时将匿名化文本输出到 stdout
+- **AND** 将实体信息输出到 stderr
+
+#### Scenario: 只输出到文件
+- **WHEN** 用户执行 `inu anonymize --file input.txt --output result.txt --no-print`
+- **THEN** 系统应该将匿名化文本写入 result.txt
+- **AND** 不向 stdout 输出任何内容
+- **AND** 不向 stderr 输出实体信息
+- **AND** 进度信息仍然输出到 stderr
+
+#### Scenario: 管道操作 - 只传递主输出
+- **WHEN** 用户执行 `echo "张三" | inu anonymize | grep "个人信息"`
+- **THEN** 系统应该将匿名化文本传递给下一个命令
+- **AND** 实体信息不会干扰管道数据流（因为在 stderr）
+
+#### Scenario: 管道操作 - 合并输出流
+- **WHEN** 用户执行 `echo "张三" | inu anonymize 2>&1 | grep "个人信息"`
+- **THEN** 系统应该将 stdout 和 stderr 合并传递给下一个命令
+- **AND** 用户可以在管道中处理实体信息
+
+#### Scenario: 重定向 - 分离输出流
+- **WHEN** 用户执行 `inu anonymize -f input.txt > output.txt 2> entities.log`
+- **THEN** 系统应该将匿名化文本写入 output.txt
+- **AND** 将实体信息和进度信息写入 entities.log
+
+#### Scenario: 重定向 - 只要主输出
+- **WHEN** 用户执行 `inu anonymize -f input.txt 2>/dev/null`
+- **THEN** 系统应该将匿名化文本输出到 stdout
+- **AND** 丢弃所有 stderr 输出（实体信息、进度信息）
+
+#### Scenario: 重定向 - 只要实体信息
+- **WHEN** 用户执行 `inu anonymize -f input.txt 1>/dev/null`
+- **THEN** 系统应该将实体信息输出到 stderr
+- **AND** 丢弃 stdout 输出（匿名化文本）
+
+### Requirement: 进度信息输出
+系统 SHALL 将进度和状态信息输出到 stderr，不受 `--no-print` 影响。
+
+#### Scenario: 显示进度信息
+- **WHEN** 用户执行 `inu anonymize --file input.txt`
+- **THEN** 系统应该在 stderr 输出：
+  - "Initializing LLM client..."
+  - "Anonymizing text..."
+  - "Anonymization complete"
+- **AND** 这些信息不会干扰 stdout 的主要输出
+
+#### Scenario: 进度信息不受 --no-print 影响
+- **WHEN** 用户执行 `inu anonymize --file input.txt --no-print`
+- **THEN** 系统仍然应该在 stderr 输出进度信息
+- **AND** 用户可以通过 `2>/dev/null` 单独禁用进度信息
+
+### Requirement: 命令参数
+系统 SHALL 提供 `--no-print` 参数来控制输出行为。
+
+#### Scenario: --no-print 参数存在于 anonymize 命令
+- **WHEN** 用户执行 `inu anonymize --help`
+- **THEN** 帮助信息应该包含 `--no-print` 参数说明
+- **AND** 不应该包含 `--print` 参数
+- **AND** 不应该包含 `--print-entities` 参数
+
+#### Scenario: --no-print 参数存在于 restore 命令
+- **WHEN** 用户执行 `inu restore --help`
+- **THEN** 帮助信息应该包含 `--no-print` 参数说明
+- **AND** 不应该包含 `--print` 参数
+
 ### Requirement: 命令行接口
 系统 SHALL 提供命令行接口来执行文本匿名化和还原操作。
 
@@ -21,25 +115,25 @@ TBD - created by archiving change add-cli-commands. Update Purpose after archive
 ### Requirement: 匿名化命令
 系统 SHALL 提供 `anonymize` 子命令来匿名化文本中的敏感信息。
 
-#### Scenario: 从标准输入读取并打印到标准输出
-- **WHEN** 用户执行 `echo "张三的电话是 13800138000" | inu anonymize --print`
-- **THEN** 系统应该读取标准输入，匿名化文本，并将结果打印到标准输出
+#### Scenario: 从标准输入读取并输出到标准输出
+- **WHEN** 用户执行 `echo "张三的电话是 13800138000" | inu anonymize`
+- **THEN** 系统应该读取标准输入，匿名化文本，并将结果输出到标准输出（默认行为）
 
 #### Scenario: 从文件读取内容
-- **WHEN** 用户执行 `inu anonymize --file input.txt --print`
-- **THEN** 系统应该读取 input.txt 文件的内容进行匿名化
+- **WHEN** 用户执行 `inu anonymize --file input.txt`
+- **THEN** 系统应该读取 input.txt 文件的内容进行匿名化并输出到标准输出
 
 #### Scenario: 从命令行参数读取内容
-- **WHEN** 用户执行 `inu anonymize --content "张三的电话是 13800138000" --print`
-- **THEN** 系统应该使用提供的内容字符串进行匿名化
+- **WHEN** 用户执行 `inu anonymize --content "张三的电话是 13800138000"`
+- **THEN** 系统应该使用提供的内容字符串进行匿名化并输出到标准输出
 
 #### Scenario: 输入优先级
 - **WHEN** 用户同时指定 `--file`、`--content` 和标准输入
 - **THEN** 系统应该按优先级使用：`--file` > `--content` > 标准输入
 
 #### Scenario: 指定实体类型
-- **WHEN** 用户执行 `inu anonymize --entity-types "个人信息,业务信息" --content "张三" --print`
-- **THEN** 系统应该只识别和匿名化指定的实体类型
+- **WHEN** 用户执行 `inu anonymize --entity-types "个人信息,业务信息" --content "张三"`
+- **THEN** 系统应该只识别和匿名化指定的实体类型并输出到标准输出
 
 #### Scenario: 使用默认实体类型
 - **WHEN** 用户执行 `inu anonymize` 而不指定 `--entity-types`
@@ -48,14 +142,15 @@ TBD - created by archiving change add-cli-commands. Update Purpose after archive
 #### Scenario: 输出匿名化文本到文件
 - **WHEN** 用户执行 `inu anonymize --file input.txt --output result.txt`
 - **THEN** 系统应该将匿名化后的文本写入 result.txt 文件
+- **AND** 同时输出到标准输出（默认行为）
 
-#### Scenario: 同时输出到终端和文件
-- **WHEN** 用户执行 `inu anonymize --content "text" --print --output result.txt`
-- **THEN** 系统应该同时将匿名化文本打印到终端并写入文件
+#### Scenario: 只输出到文件不显示
+- **WHEN** 用户执行 `inu anonymize --content "text" --no-print --output result.txt`
+- **THEN** 系统应该只将匿名化文本写入文件，不输出到标准输出
 
-#### Scenario: 打印实体信息（简化格式）
-- **WHEN** 用户执行 `inu anonymize --content "张三的电话是 13800138000" --print-entities`
-- **THEN** 系统应该以简化格式打印实体信息到终端：
+#### Scenario: 实体信息输出到 stderr（默认）
+- **WHEN** 用户执行 `inu anonymize --content "张三的电话是 13800138000"`
+- **THEN** 系统应该将实体信息输出到 stderr：
   ```
   <个人信息[0].姓名.张三>: 张三
   <个人信息[1].电话.13800138000>: 13800138000
@@ -76,7 +171,7 @@ TBD - created by archiving change add-cli-commands. Update Purpose after archive
   ```
 
 #### Scenario: 无输入内容时报错
-- **WHEN** 用户执行 `inu anonymize --print` 且无标准输入、无 `--file`、无 `--content`
+- **WHEN** 用户执行 `inu anonymize` 且无标准输入、无 `--file`、无 `--content`
 - **THEN** 系统应该退出并显示错误：需要提供输入内容
 
 #### Scenario: API 调用失败时报错
@@ -87,16 +182,16 @@ TBD - created by archiving change add-cli-commands. Update Purpose after archive
 系统 SHALL 提供 `restore` 子命令来还原匿名化的文本。
 
 #### Scenario: 从标准输入读取匿名文本并还原
-- **WHEN** 用户执行 `echo "<个人信息[0].姓名.张三>" | inu restore --entities entities.yaml --print`
-- **THEN** 系统应该读取标准输入和实体文件，还原文本并打印
+- **WHEN** 用户执行 `echo "<个人信息[0].姓名.张三>" | inu restore --entities entities.yaml`
+- **THEN** 系统应该读取标准输入和实体文件，还原文本并输出到标准输出（默认行为）
 
 #### Scenario: 从文件读取匿名文本
-- **WHEN** 用户执行 `inu restore --file anonymized.txt --entities entities.yaml --print`
-- **THEN** 系统应该读取文件内容进行还原
+- **WHEN** 用户执行 `inu restore --file anonymized.txt --entities entities.yaml`
+- **THEN** 系统应该读取文件内容进行还原并输出到标准输出
 
 #### Scenario: 从命令行参数读取匿名文本
-- **WHEN** 用户执行 `inu restore --content "<个人信息[0].姓名.张三>" --entities entities.yaml --print`
-- **THEN** 系统应该还原提供的内容字符串
+- **WHEN** 用户执行 `inu restore --content "<个人信息[0].姓名.张三>" --entities entities.yaml`
+- **THEN** 系统应该还原提供的内容字符串并输出到标准输出
 
 #### Scenario: 输入优先级
 - **WHEN** 用户同时指定 `--file`、`--content` 和标准输入
@@ -105,13 +200,14 @@ TBD - created by archiving change add-cli-commands. Update Purpose after archive
 #### Scenario: 输出还原文本到文件
 - **WHEN** 用户执行 `inu restore --file anonymized.txt --entities entities.yaml --output restored.txt`
 - **THEN** 系统应该将还原后的文本写入文件
+- **AND** 同时输出到标准输出（默认行为）
 
-#### Scenario: 同时输出到终端和文件
-- **WHEN** 用户执行 `inu restore --content "text" --entities entities.yaml --print --output restored.txt`
-- **THEN** 系统应该同时打印到终端并写入文件
+#### Scenario: 只输出到文件不显示
+- **WHEN** 用户执行 `inu restore --content "text" --entities entities.yaml --no-print --output restored.txt`
+- **THEN** 系统应该只将还原后的文本写入文件，不输出到标准输出
 
 #### Scenario: 缺少实体文件时报错
-- **WHEN** 用户执行 `inu restore --content "text" --print` 但未指定 `--entities`
+- **WHEN** 用户执行 `inu restore --content "text"` 但未指定 `--entities`
 - **THEN** 系统应该退出并显示错误：需要提供实体文件
 
 #### Scenario: 实体文件格式错误时报错
