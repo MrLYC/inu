@@ -1,0 +1,504 @@
+/*
+ * Copyright 2024 CloudWeGo Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package anonymizer
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"github.com/cloudwego/eino/schema"
+)
+
+// TestAnonymizeText_SingleEntity tests anonymizing text with a single entity.
+func TestAnonymizeText_SingleEntity(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse(
+		"<个人信息[0].姓名.全名> lives in Beijing",
+		map[string][]string{
+			"<个人信息[0].姓名.全名>": {"张三"},
+		},
+	))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	result, entities, err := anon.AnonymizeText(ctx, []string{"个人信息"}, "张三 lives in Beijing")
+	if err != nil {
+		t.Fatalf("AnonymizeText failed: %v", err)
+	}
+
+	if result != "<个人信息[0].姓名.全名> lives in Beijing" {
+		t.Errorf("Expected anonymized text with placeholder, got: %s", result)
+	}
+
+	if len(entities) != 1 {
+		t.Fatalf("Expected 1 entity, got %d", len(entities))
+	}
+
+	entity := entities[0]
+	if entity.Key != "<个人信息[0].姓名.全名>" {
+		t.Errorf("Expected key '<个人信息[0].姓名.全名>', got: %s", entity.Key)
+	}
+	if entity.EntityType != "个人信息" {
+		t.Errorf("Expected EntityType '个人信息', got: %s", entity.EntityType)
+	}
+	if entity.ID != "0" {
+		t.Errorf("Expected ID '0', got: %s", entity.ID)
+	}
+	if entity.Category != "姓名" {
+		t.Errorf("Expected Category '姓名', got: %s", entity.Category)
+	}
+	if entity.Detail != "全名" {
+		t.Errorf("Expected Detail '全名', got: %s", entity.Detail)
+	}
+	if len(entity.Values) != 1 || entity.Values[0] != "张三" {
+		t.Errorf("Expected Values ['张三'], got: %v", entity.Values)
+	}
+}
+
+// TestAnonymizeText_MultipleEntities tests anonymizing text with multiple entities.
+func TestAnonymizeText_MultipleEntities(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse(
+		"<个人信息[0].姓名.全名>'s phone is <个人信息[1].电话.号码>",
+		map[string][]string{
+			"<个人信息[0].姓名.全名>": {"张三"},
+			"<个人信息[1].电话.号码>": {"13800138000"},
+		},
+	))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	result, entities, err := anon.AnonymizeText(ctx, []string{"个人信息"}, "张三's phone is 13800138000")
+	if err != nil {
+		t.Fatalf("AnonymizeText failed: %v", err)
+	}
+
+	if result != "<个人信息[0].姓名.全名>'s phone is <个人信息[1].电话.号码>" {
+		t.Errorf("Expected anonymized text with placeholders, got: %s", result)
+	}
+
+	if len(entities) != 2 {
+		t.Fatalf("Expected 2 entities, got %d", len(entities))
+	}
+}
+
+// TestAnonymizeText_MixedEntityTypes tests anonymizing with different entity types.
+func TestAnonymizeText_MixedEntityTypes(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse(
+		"<个人信息[0].姓名.全名> works at <组织机构[0].公司.全名>",
+		map[string][]string{
+			"<个人信息[0].姓名.全名>": {"张三"},
+			"<组织机构[0].公司.全名>": {"ABC Tech"},
+		},
+	))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	result, entities, err := anon.AnonymizeText(ctx, []string{"个人信息", "组织机构"}, "张三 works at ABC Tech")
+	if err != nil {
+		t.Fatalf("AnonymizeText failed: %v", err)
+	}
+
+	if len(entities) != 2 {
+		t.Fatalf("Expected 2 entities, got %d", len(entities))
+	}
+
+	// Verify both entity types are present
+	hasPersonal := false
+	hasOrg := false
+	for _, entity := range entities {
+		if entity.EntityType == "个人信息" {
+			hasPersonal = true
+		}
+		if entity.EntityType == "组织机构" {
+			hasOrg = true
+		}
+	}
+
+	if !hasPersonal || !hasOrg {
+		t.Error("Expected both personal info and organization entities")
+	}
+
+	if result != "<个人信息[0].姓名.全名> works at <组织机构[0].公司.全名>" {
+		t.Errorf("Unexpected anonymized text: %s", result)
+	}
+}
+
+// TestAnonymizeText_EmptyText tests anonymizing empty text.
+func TestAnonymizeText_EmptyText(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse(
+		"",
+		map[string][]string{},
+	))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	result, entities, err := anon.AnonymizeText(ctx, []string{"个人信息"}, "")
+	if err != nil {
+		t.Fatalf("AnonymizeText failed: %v", err)
+	}
+
+	if result != "" {
+		t.Errorf("Expected empty result, got: %s", result)
+	}
+
+	if len(entities) != 0 {
+		t.Errorf("Expected 0 entities, got %d", len(entities))
+	}
+}
+
+// TestAnonymizeText_NoMatch tests when no entities are found.
+func TestAnonymizeText_NoMatch(t *testing.T) {
+	ctx := context.Background()
+	originalText := "This is just plain text"
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse(
+		originalText,
+		map[string][]string{},
+	))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	result, entities, err := anon.AnonymizeText(ctx, []string{"个人信息"}, originalText)
+	if err != nil {
+		t.Fatalf("AnonymizeText failed: %v", err)
+	}
+
+	if result != originalText {
+		t.Errorf("Expected original text, got: %s", result)
+	}
+
+	if len(entities) != 0 {
+		t.Errorf("Expected 0 entities, got %d", len(entities))
+	}
+}
+
+// TestAnonymizeText_LLMError tests handling LLM API errors.
+func TestAnonymizeText_LLMError(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockErrorResponse(errors.New("API connection failed"))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	_, _, err = anon.AnonymizeText(ctx, []string{"个人信息"}, "张三")
+	if err == nil {
+		t.Error("Expected error when LLM fails, got nil")
+	}
+}
+
+// TestAnonymizeText_InvalidResponseFormat tests handling invalid response format.
+func TestAnonymizeText_InvalidResponseFormat(t *testing.T) {
+	ctx := context.Background()
+	// Response missing <<<PAIR>>> separator
+	mockLLM := newMockWithResponse(&schema.Message{
+		Role:    schema.Assistant,
+		Content: "This response is missing the separator",
+	})
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	_, _, err = anon.AnonymizeText(ctx, []string{"个人信息"}, "张三")
+	if err == nil {
+		t.Error("Expected error for invalid response format, got nil")
+	}
+}
+
+// TestAnonymizeText_InvalidJSON tests handling invalid JSON in mapping.
+func TestAnonymizeText_InvalidJSON(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(&schema.Message{
+		Role:    schema.Assistant,
+		Content: "anonymized text\n<<<PAIR>>>\n{invalid json}",
+	})
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	_, _, err = anon.AnonymizeText(ctx, []string{"个人信息"}, "张三")
+	if err == nil {
+		t.Error("Expected error for invalid JSON, got nil")
+	}
+}
+
+// TestAnonymizeText_InvalidKeyFormat tests handling invalid entity key format.
+func TestAnonymizeText_InvalidKeyFormat(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse(
+		"invalid key format",
+		map[string][]string{
+			"<invalid-key>": {"value"},
+		},
+	))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	_, _, err = anon.AnonymizeText(ctx, []string{"个人信息"}, "text")
+	if err == nil {
+		t.Error("Expected error for invalid key format, got nil")
+	}
+}
+
+// TestRestoreText_SingleEntity tests restoring text with a single entity.
+func TestRestoreText_SingleEntity(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	entities := []*Entity{
+		{
+			Key:        "<个人信息[0].姓名.全名>",
+			EntityType: "个人信息",
+			ID:         "0",
+			Category:   "姓名",
+			Detail:     "张三",
+			Values:     []string{"张三"},
+		},
+	}
+
+	anonymizedText := "<个人信息[0].姓名.全名> lives in Beijing"
+	result, err := anon.RestoreText(ctx, entities, anonymizedText)
+	if err != nil {
+		t.Fatalf("RestoreText failed: %v", err)
+	}
+
+	expected := "张三 lives in Beijing"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+// TestRestoreText_MultipleEntities tests restoring text with multiple entities.
+func TestRestoreText_MultipleEntities(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	entities := []*Entity{
+		{
+			Key:    "<个人信息[0].姓名.全名>",
+			Values: []string{"张三"},
+		},
+		{
+			Key:    "<个人信息[1].电话.号码>",
+			Values: []string{"13800138000"},
+		},
+	}
+
+	anonymizedText := "<个人信息[0].姓名.全名>'s phone is <个人信息[1].电话.号码>"
+	result, err := anon.RestoreText(ctx, entities, anonymizedText)
+	if err != nil {
+		t.Fatalf("RestoreText failed: %v", err)
+	}
+
+	expected := "张三's phone is 13800138000"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+// TestRestoreText_EmptyText tests restoring empty text.
+func TestRestoreText_EmptyText(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	entities := []*Entity{
+		{Key: "<个人信息[0].姓名.全名>", Values: []string{"张三"}},
+	}
+
+	result, err := anon.RestoreText(ctx, entities, "")
+	if err != nil {
+		t.Fatalf("RestoreText failed: %v", err)
+	}
+
+	if result != "" {
+		t.Errorf("Expected empty string, got %q", result)
+	}
+}
+
+// TestRestoreText_EmptyEntities tests restoring with empty entity list.
+func TestRestoreText_EmptyEntities(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	originalText := "Some text without placeholders"
+	result, err := anon.RestoreText(ctx, []*Entity{}, originalText)
+	if err != nil {
+		t.Fatalf("RestoreText failed: %v", err)
+	}
+
+	if result != originalText {
+		t.Errorf("Expected original text, got %q", result)
+	}
+}
+
+// TestRestoreText_NoPlaceholders tests restoring text without placeholders.
+func TestRestoreText_NoPlaceholders(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	entities := []*Entity{
+		{Key: "<个人信息[0].姓名.全名>", Values: []string{"张三"}},
+	}
+
+	originalText := "This text has no placeholders"
+	result, err := anon.RestoreText(ctx, entities, originalText)
+	if err != nil {
+		t.Fatalf("RestoreText failed: %v", err)
+	}
+
+	if result != originalText {
+		t.Errorf("Expected original text, got %q", result)
+	}
+}
+
+// TestRestoreText_EntityNoValues tests restoring with entity that has no values.
+func TestRestoreText_EntityNoValues(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	entities := []*Entity{
+		{Key: "<个人信息[0].姓名.全名>", Values: []string{}}, // No values
+		{Key: "<个人信息[1].电话.号码>", Values: []string{"13800138000"}},
+	}
+
+	anonymizedText := "<个人信息[0].姓名.全名> <个人信息[1].电话.号码>"
+	result, err := anon.RestoreText(ctx, entities, anonymizedText)
+	if err != nil {
+		t.Fatalf("RestoreText failed: %v", err)
+	}
+
+	// First entity should not be replaced, second should
+	expected := "<个人信息[0].姓名.全名> 13800138000"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+// TestAnonymizeAndRestore_RoundTrip tests full anonymize and restore cycle.
+func TestAnonymizeAndRestore_RoundTrip(t *testing.T) {
+	ctx := context.Background()
+	originalText := "张三's phone is 13800138000"
+
+	// Mock for anonymization
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse(
+		"<个人信息[0].姓名.全名>'s phone is <个人信息[1].电话.号码>",
+		map[string][]string{
+			"<个人信息[0].姓名.全名>": {"张三"},
+			"<个人信息[1].电话.号码>": {"13800138000"},
+		},
+	))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	// Anonymize
+	anonymizedText, entities, err := anon.AnonymizeText(ctx, []string{"个人信息"}, originalText)
+	if err != nil {
+		t.Fatalf("AnonymizeText failed: %v", err)
+	}
+
+	// Restore
+	restoredText, err := anon.RestoreText(ctx, entities, anonymizedText)
+	if err != nil {
+		t.Fatalf("RestoreText failed: %v", err)
+	}
+
+	// Verify round-trip
+	if restoredText != originalText {
+		t.Errorf("Round-trip failed: expected %q, got %q", originalText, restoredText)
+	}
+}
+
+// TestNew_Success tests successful creation of Anonymizer.
+func TestNew_Success(t *testing.T) {
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
+
+	anon, err := New(mockLLM)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	if anon == nil {
+		t.Error("Expected non-nil Anonymizer")
+	}
+
+	if anon.llm == nil {
+		t.Error("Expected non-nil llm field")
+	}
+
+	if anon.anonymizeTemplate == nil {
+		t.Error("Expected non-nil anonymizeTemplate field")
+	}
+}
