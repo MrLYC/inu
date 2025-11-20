@@ -18,6 +18,7 @@ package commands
 
 import (
 	"context"
+	"io"
 	"os"
 
 	"github.com/mrlyc/inu/pkg/anonymizer"
@@ -89,18 +90,42 @@ func runAnonymize(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Anonymize text
+	// Determine output writer
+	var writer io.Writer
+	var fileWriter *os.File
+
+	if !anonymizeNoPrint && anonymizeOutput != "" {
+		// Output to both stdout and file
+		fileWriter, err = os.Create(anonymizeOutput)
+		if err != nil {
+			return err
+		}
+		defer fileWriter.Close()
+		writer = io.MultiWriter(os.Stdout, fileWriter)
+	} else if !anonymizeNoPrint {
+		// Output to stdout only
+		writer = os.Stdout
+	} else if anonymizeOutput != "" {
+		// Output to file only
+		fileWriter, err = os.Create(anonymizeOutput)
+		if err != nil {
+			return err
+		}
+		defer fileWriter.Close()
+		writer = fileWriter
+	} else {
+		// No output (no-print and no output file)
+		writer = io.Discard
+	}
+
+	// Anonymize text with streaming
 	cli.ProgressMessage("Anonymizing text...")
-	result, entities, err := anon.AnonymizeText(ctx, entityTypes, input)
+	entities, err := anon.AnonymizeTextStream(ctx, entityTypes, input, writer)
 	if err != nil {
 		return err
 	}
 
-	// Output anonymized text
-	if err := cli.WriteOutput(result, anonymizeNoPrint, anonymizeOutput); err != nil {
-		return err
-	}
-
+	cli.ProgressMessage("Anonymization complete")
 	// Output entities to stderr
 	cli.WriteEntitiesToStderr(entities, anonymizeNoPrint)
 
@@ -112,6 +137,6 @@ func runAnonymize(cmd *cobra.Command, args []string) error {
 		cli.ProgressMessage("Entities saved to: %s", anonymizeOutputEntities)
 	}
 
-	cli.ProgressMessage("Anonymization complete")
+	cli.ProgressMessage("All done")
 	return nil
 }
