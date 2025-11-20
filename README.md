@@ -70,35 +70,100 @@ export OPENAI_BASE_URL="https://api.openai.com/v1"  # 可选，默认为 OpenAI
 
 #### 匿名化文本
 
-从文件读取：
+从文件读取并输出到标准输出：
+```bash
+inu anonymize --file input.txt --output-entities entities.yaml
+```
+
+保存到文件（默认也输出到标准输出）：
 ```bash
 inu anonymize --file input.txt --output anonymized.txt --output-entities entities.yaml
 ```
 
-从命令行参数：
+只保存到文件，不打印到标准输出：
 ```bash
-inu anonymize --content "张三的电话是 13800138000" --print
+inu anonymize --file input.txt --no-print --output anonymized.txt --output-entities entities.yaml
 ```
 
-从标准输入：
+从命令行参数读取：
 ```bash
-echo "李四住在北京市朝阳区" | inu anonymize --print
+inu anonymize --content "张三的电话是 13800138000"
+```
+
+从标准输入（默认输出到标准输出和标准错误）：
+```bash
+echo "李四住在北京市朝阳区" | inu anonymize --output-entities entities.yaml
+```
+
+使用管道（entities 信息输出到 stderr）：
+```bash
+cat input.txt | inu anonymize --output-entities entities.yaml > anonymized.txt 2> entities.log
 ```
 
 指定实体类型：
 ```bash
-inu anonymize --file input.txt --entity-types "个人信息,业务信息,资产信息" --print
+inu anonymize --file input.txt --entity-types "个人信息,业务信息,资产信息"
 ```
 
 #### 还原文本
 
+从文件读取并输出到标准输出：
+```bash
+inu restore --file anonymized.txt --entities entities.yaml
+```
+
+保存到文件（默认也输出到标准输出）：
 ```bash
 inu restore --file anonymized.txt --entities entities.yaml --output restored.txt
 ```
 
-同时打印和保存：
+只保存到文件，不打印到标准输出：
 ```bash
-inu restore --file anonymized.txt --entities entities.yaml --print --output restored.txt
+inu restore --file anonymized.txt --entities entities.yaml --no-print --output restored.txt
+```
+
+使用管道：
+```bash
+cat anonymized.txt | inu restore --entities entities.yaml > restored.txt
+```
+
+#### 从旧版本迁移
+
+**⚠️ Breaking Changes in v0.2.0**
+
+从 v0.2.0 开始，CLI 输出行为已更改，遵循 Unix 标准约定：
+
+**旧版本（v0.1.x）**：
+- 默认不输出到 stdout，需要使用 `--print` 参数
+- 使用 `--print-entities` 输出 entities
+
+**新版本（v0.2.0+）**：
+- **默认输出到 stdout**（标准输出）
+- **entities 默认输出到 stderr**（标准错误）
+- 使用 `--no-print` 参数来**抑制** stdout 输出
+- 移除了 `--print` 和 `--print-entities` 参数
+
+**迁移示例**：
+
+```bash
+# 旧版本：
+inu anonymize -f input.txt -o output.txt --print --print-entities
+
+# 新版本（等效）：
+inu anonymize -f input.txt -o output.txt
+# 输出到 stdout 和 output.txt，entities 到 stderr
+
+# 如果只想要文件输出（旧版本的默认行为）：
+inu anonymize -f input.txt -o output.txt --no-print
+```
+
+这个改变使 `inu` 更符合 Unix 哲学，更容易在管道中使用：
+```bash
+# 现在可以直接这样使用：
+cat input.txt | inu anonymize | tee anonymized.txt
+
+# entities 可以重定向到日志文件：
+cat input.txt | inu anonymize 2> entities.log > anonymized.txt
 ```
 
 ### Web API 使用

@@ -29,8 +29,7 @@ var (
 	anonymizeFile           string
 	anonymizeContent        string
 	anonymizeEntityTypes    []string
-	anonymizePrint          bool
-	anonymizePrintEntities  bool
+	anonymizeNoPrint        bool
 	anonymizeOutput         string
 	anonymizeOutputEntities string
 )
@@ -49,8 +48,7 @@ The anonymized entities can be saved to a YAML file for later restoration.`,
 	flags.StringVarP(&anonymizeFile, "file", "f", "", "Read input from file")
 	flags.StringVarP(&anonymizeContent, "content", "c", "", "Input content as string")
 	flags.StringSliceVarP(&anonymizeEntityTypes, "entity-types", "t", anonymizer.DefaultEntityTypes, "Entity types to detect (comma-separated)")
-	flags.BoolVarP(&anonymizePrint, "print", "p", false, "Print anonymized text to stdout")
-	flags.BoolVar(&anonymizePrintEntities, "print-entities", false, "Print entities in simplified format to stdout")
+	flags.BoolVar(&anonymizeNoPrint, "no-print", false, "Do not print output to stdout (default: print to stdout)")
 	flags.StringVarP(&anonymizeOutput, "output", "o", "", "Write anonymized text to file")
 	flags.StringVarP(&anonymizeOutputEntities, "output-entities", "e", "", "Write entities to YAML file")
 
@@ -99,15 +97,14 @@ func runAnonymize(cmd *cobra.Command, args []string) error {
 	}
 
 	// Output anonymized text
-	if err := cli.WriteOutput(result, anonymizePrint, anonymizeOutput); err != nil {
+	if err := cli.WriteOutput(result, anonymizeNoPrint, anonymizeOutput); err != nil {
 		return err
 	}
 
-	// Output entities
-	if anonymizePrintEntities {
-		cli.PrintEntitiesSimplified(entities)
-	}
+	// Output entities to stderr
+	cli.WriteEntitiesToStderr(entities, anonymizeNoPrint)
 
+	// Output entities to file
 	if anonymizeOutputEntities != "" {
 		if err := cli.SaveEntitiesToYAML(entities, anonymizeOutputEntities); err != nil {
 			return err

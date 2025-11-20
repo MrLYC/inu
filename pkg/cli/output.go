@@ -25,23 +25,33 @@ import (
 )
 
 // WriteOutput writes content to stdout and/or file based on flags.
-func WriteOutput(content string, print bool, outputFile string) error {
-	if print {
+// By default (noPrint=false), content is written to stdout.
+// If outputFile is specified, content is also written to the file.
+// If noPrint=true, stdout output is suppressed.
+func WriteOutput(content string, noPrint bool, outputFile string) error {
+	// Write to stdout by default, unless noPrint is true
+	if !noPrint {
 		fmt.Println(content)
 	}
 
+	// Write to file if specified
 	if outputFile != "" {
 		if err := os.WriteFile(outputFile, []byte(content), 0644); err != nil {
 			return eris.Wrapf(err, "failed to write output to file: %s", outputFile)
 		}
 	}
 
-	// If neither print nor output is specified, just do nothing (no error)
 	return nil
 }
 
-// PrintEntitiesSimplified prints entities in simplified format: key: values.
-func PrintEntitiesSimplified(entities []*anonymizer.Entity) {
+// WriteEntitiesToStderr writes entity information to stderr in simplified format.
+// By default (noPrint=false), entities are written to stderr.
+// If noPrint=true, stderr output is suppressed.
+func WriteEntitiesToStderr(entities []*anonymizer.Entity, noPrint bool) {
+	if noPrint || len(entities) == 0 {
+		return
+	}
+
 	for _, entity := range entities {
 		values := ""
 		if len(entity.Values) > 0 {
@@ -50,6 +60,12 @@ func PrintEntitiesSimplified(entities []*anonymizer.Entity) {
 				values += ", " + entity.Values[i]
 			}
 		}
-		fmt.Printf("%s: %s\n", entity.Key, values)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", entity.Key, values)
 	}
+}
+
+// PrintEntitiesSimplified is deprecated. Use WriteEntitiesToStderr instead.
+// Kept for backward compatibility during transition.
+func PrintEntitiesSimplified(entities []*anonymizer.Entity) {
+	WriteEntitiesToStderr(entities, false)
 }
