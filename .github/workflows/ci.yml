@@ -1,0 +1,104 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+permissions:
+    contents: read
+
+jobs:
+    test:
+        name: Test
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                go-version: ["1.24.x"]
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: ${{ matrix.go-version }}
+                  cache: true
+
+            - name: Download dependencies
+              run: go mod download
+
+            - name: Run tests
+              run: go test -v -race -cover ./...
+
+            - name: Verify build
+              run: make build
+
+    lint:
+        name: Lint
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24.x"
+                  cache: true
+
+            - name: Run golangci-lint
+              uses: golangci/golangci-lint-action@v6
+              with:
+                  version: latest
+                  args: --timeout=5m
+
+    build-matrix:
+        name: Build Matrix
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                include:
+                    - goos: linux
+                      goarch: amd64
+                    - goos: linux
+                      goarch: arm64
+                    - goos: darwin
+                      goarch: amd64
+                    - goos: darwin
+                      goarch: arm64
+                    - goos: windows
+                      goarch: amd64
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24.x"
+                  cache: true
+
+            - name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
+              env:
+                  GOOS: ${{ matrix.goos }}
+                  GOARCH: ${{ matrix.goarch }}
+              run: |
+                  VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+                  COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+                  BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+                  LDFLAGS="-X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.BuildTime=${BUILD_TIME}"
+
+                  if [ "${{ matrix.goos }}" = "windows" ]; then
+                    OUTPUT="bin/inu-${{ matrix.goos }}-${{ matrix.goarch }}.exe"
+                  else
+                    OUTPUT="bin/inu-${{ matrix.goos }}-${{ matrix.goarch }}"
+                  fi
+
+                  mkdir -p bin
+                  go build -ldflags "${LDFLAGS}" -o "${OUTPUT}" ./cmd/inu
+                  echo "Built: ${OUTPUT}"

@@ -1,24 +1,48 @@
-# Created by https://www.toptal.com/developers/gitignore/api/golang,mac,linux
-# Edit at https://www.toptal.com/developers/gitignore?templates=golang,mac,linux
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
-#!! ERROR: golang is undefined. Use list command to see defined gitignore types !!#
+# Test binary, built with `go test -c`
+*.test
 
-### Linux ###
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Build artifacts
+bin/
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 *~
 
-# temporary files which can be created if a process still has a handle open of a deleted file
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
 .fuse_hidden*
-
-# KDE directory preferences
 .directory
-
-# Linux trash folder which might appear on any partition or disk
 .Trash-*
-
-# .nfs files are created when an open file is removed but is still being accessed
 .nfs*
 
-#!! ERROR: mac is undefined. Use list command to see defined gitignore types !!#
+# Environment variables
+.env
+.env.local
 
-# End of https://www.toptal.com/developers/gitignore/api/golang,mac,linux
-n
+# Temporary files
+*.tmp
+*.bak
+*.log
