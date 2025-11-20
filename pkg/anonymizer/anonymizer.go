@@ -161,8 +161,7 @@ func (a *Anonymizer) AnonymizeTextStream(ctx context.Context, types []string, te
 		return entities, nil
 	}
 
-	var lineBuffer bytes.Buffer
-	var entitiesBuffer bytes.Buffer // Entity JSON
+	var buffer bytes.Buffer
 	foundPair := false
 
 	for {
@@ -176,28 +175,30 @@ func (a *Anonymizer) AnonymizeTextStream(ctx context.Context, types []string, te
 
 		if foundPair {
 			// After <<<PAIR>>>, collect JSON tokens
-			entitiesBuffer.WriteString(msg.Content)
+			buffer.WriteString(msg.Content)
 			continue
 		}
 
-		lineBuffer.WriteString(msg.Content)
+		buffer.WriteString(msg.Content)
 		if !strings.Contains(msg.Content, "\n") {
 			continue
-		} else if strings.Contains(lineBuffer.String(), "<<<PAIR>>>") {
+		} else if strings.Contains(buffer.String(), "<<<PAIR>>>") {
+			buffer.Reset()
 			foundPair = true
 			continue
 		}
 
-		_, err = writer.Write(lineBuffer.Bytes())
+		_, err = writer.Write(buffer.Bytes())
 		if err != nil {
 			return nil, eris.Wrap(err, "failed to write to output")
 		}
-		lineBuffer.Reset()
+		buffer.Reset()
 	}
 
-	entities, err := parseAnonymizeEntities(entitiesBuffer.Bytes())
+	entitesBytes := buffer.Bytes()
+	entities, err := parseAnonymizeEntities(entitesBytes)
 	if err != nil {
-		return nil, eris.Wrap(err, "failed to parse anonymize response")
+		return nil, eris.Wrapf(err, "failed to parse anonymize response: %s", string(entitesBytes))
 	}
 
 	return entities, nil

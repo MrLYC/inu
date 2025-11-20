@@ -113,15 +113,19 @@
 - **THEN** 系统应该显示该子命令的详细使用说明和参数列表
 
 ### Requirement: 匿名化命令
-系统 SHALL 提供 `anonymize` 子命令来匿名化文本中的敏感信息。
+系统 SHALL 提供 `anonymize` 子命令来匿名化文本中的敏感信息，使用流式输出改善用户体验。
 
-#### Scenario: 从标准输入读取并输出到标准输出
+#### Scenario: 从标准输入读取并流式输出到标准输出
 - **WHEN** 用户执行 `echo "张三的电话是 13800138000" | inu anonymize`
-- **THEN** 系统应该读取标准输入，匿名化文本，并将结果输出到标准输出（默认行为）
+- **THEN** 系统应该读取标准输入，流式生成匿名化文本
+- **AND** 实时输出到标准输出（逐 token）
+- **AND** 在流式输出完成后，实体信息输出到 stderr
 
-#### Scenario: 从文件读取内容
+#### Scenario: 从文件读取并流式输出
 - **WHEN** 用户执行 `inu anonymize --file input.txt`
-- **THEN** 系统应该读取 input.txt 文件的内容进行匿名化并输出到标准输出
+- **THEN** 系统应该读取 input.txt 文件的内容
+- **AND** 流式生成并输出匿名化文本到标准输出
+- **AND** 用户可以实时看到输出进度
 
 #### Scenario: 从命令行参数读取内容
 - **WHEN** 用户执行 `inu anonymize --content "张三的电话是 13800138000"`
@@ -141,8 +145,15 @@
 
 #### Scenario: 输出匿名化文本到文件
 - **WHEN** 用户执行 `inu anonymize --file input.txt --output result.txt`
-- **THEN** 系统应该将匿名化后的文本写入 result.txt 文件
-- **AND** 同时输出到标准输出（默认行为）
+- **THEN** 系统应该流式生成匿名化文本
+- **AND** 同时写入 result.txt 和 stdout
+- **AND** 两个输出目标都是流式写入
+
+#### Scenario: 流式输出到管道
+- **WHEN** 用户执行 `inu anonymize --file input.txt | grep "个人信息"`
+- **THEN** 系统应该将 token 实时传递给管道下游命令
+- **AND** 下游命令可以立即开始处理
+- **AND** 不会因为上游缓冲导致延迟
 
 #### Scenario: 只输出到文件不显示
 - **WHEN** 用户执行 `inu anonymize --content "text" --no-print --output result.txt`
@@ -177,6 +188,19 @@
 #### Scenario: API 调用失败时报错
 - **WHEN** 匿名化过程中 LLM API 调用失败（网络错误、认证失败等）
 - **THEN** 系统应该退出并显示清晰的错误信息，包括失败原因
+
+#### Scenario: 流式输出被中断
+- **WHEN** 用户在流式输出过程中按 Ctrl+C
+- **THEN** 系统应该立即停止 LLM 请求
+- **AND** 已输出的部分保留在输出中
+- **AND** 实体信息可能不完整（未完全解析）
+
+#### Scenario: 流式输出遇到错误
+- **WHEN** 流式输出过程中 LLM 返回错误（如网络中断）
+- **THEN** 系统应该立即停止输出
+- **AND** 显示错误信息到 stderr
+- **AND** 已输出的部分文本保留
+- **AND** 返回非零退出码
 
 ### Requirement: 还原命令
 系统 SHALL 提供 `restore` 子命令来还原匿名化的文本。
@@ -233,3 +257,13 @@
 - **WHEN** 处理大文件或 API 调用耗时较长
 - **THEN** 系统应该在 stderr 显示进度提示（如 "Processing..." 或进度条）
 
+## Implementation Notes
+
+### Streaming Anonymization
+- 流式输出基于 CloudWeGo Eino 的 `StreamReader` 接口
+- 内部使用 `llm.Stream()` 替代 `llm.Generate()`
+- 实体映射在完整响应后解析（`<<<PAIR>>>` 分隔符）
+- 使用 `io.MultiWriter` 支持同时输出到多个目标
+- 在 `<<<PAIR>>>` 标记前：所有 token 实时写入 writer
+- 在 `<<<PAIR>>>` 标记后：token 用于实体 JSON 解析，不写入 writer
+- Fallback 机制：Stream() 失败时自动使用 Generate() 并解析完整响应
