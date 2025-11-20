@@ -69,7 +69,7 @@ func (a *Anonymizer) AnonymizeText(ctx context.Context, types []string, text str
 
 	splited := strings.SplitN(response.Content, "<<<PAIR>>>", 2)
 	if len(splited) != 2 {
-		return "", nil, fmt.Errorf("invalid response format, expected 2 parts but got %d", len(splited))
+		return "", nil, fmt.Errorf("invalid response format, expected 2 parts but got %d, %s", len(splited), response.Content)
 	}
 
 	anonymizedText := strings.TrimSpace(splited[0])
