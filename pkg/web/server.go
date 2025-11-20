@@ -18,13 +18,13 @@ const version = "v0.1.0"
 // Server represents the HTTP API server
 type Server struct {
 	config     *Config
-	anonymizer *anonymizer.Anonymizer
+	anonymizer anonymizer.Anonymizer
 	engine     *gin.Engine
 	httpServer *http.Server
 }
 
 // NewServer creates a new web server instance
-func NewServer(anon *anonymizer.Anonymizer, config *Config) (*Server, error) {
+func NewServer(anon anonymizer.Anonymizer, config *Config) (*Server, error) {
 	if err := config.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid config: %w", err)
 	}

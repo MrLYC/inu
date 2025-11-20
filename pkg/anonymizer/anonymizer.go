@@ -32,20 +32,43 @@ import (
 	"github.com/cloudwego/eino/schema"
 )
 
-// Anonymizer is the entity anonymization handler.
-type Anonymizer struct {
+// Anonymizer 定义文本敏感信息匿名化的核心接口。
+// 实现此接口的类型应当能够：
+//  1. 将原始文本中的敏感实体替换为占位符
+//  2. 记录实体映射关系以支持还原
+//  3. 支持流式输出以改善用户体验
+type Anonymizer interface {
+	// AnonymizeText 批量匿名化文本，返回完整结果
+	AnonymizeText(ctx context.Context, types []string, text string) (string, []*Entity, error)
+
+	// AnonymizeTextStream 流式匿名化文本，实时写入 writer
+	AnonymizeTextStream(ctx context.Context, types []string, text string, writer io.Writer) ([]*Entity, error)
+
+	// RestoreText 使用实体映射还原匿名化文本
+	RestoreText(ctx context.Context, entities []*Entity, text string) (string, error)
+}
+
+// HasHidePair 是基于 <<<PAIR>>> 分隔符格式的 Anonymizer 实现。
+// 它使用 LLM 生成匿名化文本和实体映射，响应格式为：
+//
+//	<匿名化文本>
+//	<<<PAIR>>>
+//	<JSON 映射>
+//
+// 此实现支持流式输出，在遇到 <<<PAIR>>> 标记前将 token 实时写入输出。
+type HasHidePair struct {
 	anonymizeTemplate *prompt.DefaultChatTemplate
 	llm               model.BaseChatModel
 }
 
 // createAnonymizeMessages creates messages for anonymization.
-func (a *Anonymizer) createAnonymizeMessages(ctx context.Context, types []string, text string) ([]*schema.Message, error) {
+func (h *HasHidePair) createAnonymizeMessages(ctx context.Context, types []string, text string) ([]*schema.Message, error) {
 	encodedTypes, err := json.Marshal(types)
 	if err != nil {
 		return nil, eris.Wrap(err, "failed to marshal types")
 	}
 
-	messages, err := a.anonymizeTemplate.Format(ctx, map[string]any{
+	messages, err := h.anonymizeTemplate.Format(ctx, map[string]any{
 		"types": string(encodedTypes),
 		"text":  text,
 	})
@@ -135,17 +158,17 @@ func parseAnonymizeEntities(entitiesStr []byte) ([]*Entity, error) {
 //	}
 //	fmt.Printf("Streamed output: %s\n", buf.String())
 //	fmt.Printf("Entities: %+v\n", entities)
-func (a *Anonymizer) AnonymizeTextStream(ctx context.Context, types []string, text string, writer io.Writer) ([]*Entity, error) {
-	messages, err := a.createAnonymizeMessages(ctx, types, text)
+func (h *HasHidePair) AnonymizeTextStream(ctx context.Context, types []string, text string, writer io.Writer) ([]*Entity, error) {
+	messages, err := h.createAnonymizeMessages(ctx, types, text)
 	if err != nil {
 		return nil, eris.Wrap(err, "failed to create anonymize messages")
 	}
 
 	// Get streaming reader from LLM
-	streamReader, err := a.llm.Stream(ctx, messages)
+	streamReader, err := h.llm.Stream(ctx, messages)
 	if err != nil {
 		// Fallback to Generate if Stream is not supported (e.g., in tests)
-		response, genErr := a.llm.Generate(ctx, messages)
+		response, genErr := h.llm.Generate(ctx, messages)
 		if genErr != nil {
 			return nil, eris.Wrap(genErr, "failed to generate response (stream fallback)")
 		}
@@ -207,9 +230,9 @@ func (a *Anonymizer) AnonymizeTextStream(ctx context.Context, types []string, te
 // AnonymizeText anonymizes the given text based on the specified entity types.
 // This method uses streaming internally but returns the complete result.
 // For real-time streaming output, use AnonymizeTextStream instead.
-func (a *Anonymizer) AnonymizeText(ctx context.Context, types []string, text string) (string, []*Entity, error) {
+func (h *HasHidePair) AnonymizeText(ctx context.Context, types []string, text string) (string, []*Entity, error) {
 	var buf bytes.Buffer
-	entities, err := a.AnonymizeTextStream(ctx, types, text, &buf)
+	entities, err := h.AnonymizeTextStream(ctx, types, text, &buf)
 	if err != nil {
 		return "", nil, err
 	}
@@ -220,7 +243,7 @@ func (a *Anonymizer) AnonymizeText(ctx context.Context, types []string, text str
 }
 
 // RestoreText restores the original text from the anonymized text using the provided entities.
-func (a *Anonymizer) RestoreText(ctx context.Context, entities []*Entity, text string) (string, error) {
+func (h *HasHidePair) RestoreText(ctx context.Context, entities []*Entity, text string) (string, error) {
 	var replaceMapping []string
 	for _, entity := range entities {
 		if len(entity.Values) == 0 {
@@ -233,15 +256,16 @@ func (a *Anonymizer) RestoreText(ctx context.Context, entities []*Entity, text s
 	return replacer.Replace(text), nil
 }
 
-// New creates a new Anonymizer instance.
-func New(chatModel model.BaseChatModel) (*Anonymizer, error) {
+// NewHashHidePair 创建一个基于 <<<PAIR>>> 格式的 Anonymizer 实现。
+// 该实现使用 LLM 进行文本匿名化，响应格式为匿名化文本和 JSON 映射由 <<<PAIR>>> 分隔。
+func NewHashHidePair(chatModel model.BaseChatModel) (Anonymizer, error) {
 	anonymizeTemplate := prompt.FromMessages(schema.FString,
 		schema.UserMessage(`Anonymize the text with the given entity types, then output the tag-to-original mapping; if nothing is found, reply "None".
 Specified types: {types}
 <text>{text}</text>`),
 	)
 
-	return &Anonymizer{
+	return &HasHidePair{
 		anonymizeTemplate: anonymizeTemplate,
 		llm:               chatModel,
 	}, nil

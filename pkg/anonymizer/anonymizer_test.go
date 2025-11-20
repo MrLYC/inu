@@ -34,7 +34,7 @@ func TestAnonymizeText_SingleEntity(t *testing.T) {
 		},
 	))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestAnonymizeText_MultipleEntities(t *testing.T) {
 		},
 	))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -114,7 +114,7 @@ func TestAnonymizeText_MixedEntityTypes(t *testing.T) {
 		},
 	))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -157,7 +157,7 @@ func TestAnonymizeText_EmptyText(t *testing.T) {
 		map[string][]string{},
 	))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -185,7 +185,7 @@ func TestAnonymizeText_NoMatch(t *testing.T) {
 		map[string][]string{},
 	))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -209,7 +209,7 @@ func TestAnonymizeText_LLMError(t *testing.T) {
 	ctx := context.Background()
 	mockLLM := newMockErrorResponse(errors.New("API connection failed"))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -229,7 +229,7 @@ func TestAnonymizeText_InvalidResponseFormat(t *testing.T) {
 		Content: "This response is missing the separator",
 	})
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -248,7 +248,7 @@ func TestAnonymizeText_InvalidJSON(t *testing.T) {
 		Content: "anonymized text\n<<<PAIR>>>\n{invalid json}",
 	})
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -269,7 +269,7 @@ func TestAnonymizeText_InvalidKeyFormat(t *testing.T) {
 		},
 	))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -285,7 +285,7 @@ func TestRestoreText_SingleEntity(t *testing.T) {
 	ctx := context.Background()
 	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -318,7 +318,7 @@ func TestRestoreText_MultipleEntities(t *testing.T) {
 	ctx := context.Background()
 	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -351,7 +351,7 @@ func TestRestoreText_EmptyText(t *testing.T) {
 	ctx := context.Background()
 	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -375,7 +375,7 @@ func TestRestoreText_EmptyEntities(t *testing.T) {
 	ctx := context.Background()
 	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -396,7 +396,7 @@ func TestRestoreText_NoPlaceholders(t *testing.T) {
 	ctx := context.Background()
 	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -421,7 +421,7 @@ func TestRestoreText_EntityNoValues(t *testing.T) {
 	ctx := context.Background()
 	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -458,7 +458,7 @@ func TestAnonymizeAndRestore_RoundTrip(t *testing.T) {
 		},
 	))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
@@ -485,7 +485,7 @@ func TestAnonymizeAndRestore_RoundTrip(t *testing.T) {
 func TestNew_Success(t *testing.T) {
 	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
 
-	anon, err := New(mockLLM)
+	anon, err := NewHashHidePair(mockLLM)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -494,11 +494,17 @@ func TestNew_Success(t *testing.T) {
 		t.Error("Expected non-nil Anonymizer")
 	}
 
-	if anon.llm == nil {
+	// Type assertion to verify it's actually a HasHidePair
+	impl, ok := anon.(*HasHidePair)
+	if !ok {
+		t.Fatal("Expected *HasHidePair implementation")
+	}
+
+	if impl.llm == nil {
 		t.Error("Expected non-nil llm field")
 	}
 
-	if anon.anonymizeTemplate == nil {
+	if impl.anonymizeTemplate == nil {
 		t.Error("Expected non-nil anonymizeTemplate field")
 	}
 }

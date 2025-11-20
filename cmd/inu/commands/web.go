@@ -74,7 +74,7 @@ func runWeb(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	anon, err := anonymizer.New(llm)
+	anon, err := anonymizer.NewHashHidePair(llm)
 	if err != nil {
 		return err
 	}

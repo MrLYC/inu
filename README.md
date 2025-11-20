@@ -306,7 +306,7 @@ func main() {
     }
     
     // 创建匿名化器
-    anon, err := anonymizer.New(llm)
+    anon, err := anonymizer.NewHashHidePair(llm)
     if err != nil {
         log.Fatal(err)
     }
