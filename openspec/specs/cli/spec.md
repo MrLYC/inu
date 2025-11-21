@@ -202,7 +202,7 @@
 - **AND** 返回非零退出码
 
 ### Requirement: 还原命令
-系统 SHALL 提供 `restore` 子命令来还原匿名化的文本。
+系统 SHALL 提供 `restore` 子命令来还原匿名化的文本，支持占位符格式变化的容错匹配。
 
 #### Scenario: 从标准输入读取匿名文本并还原
 - **WHEN** 用户执行 `echo "<个人信息[0].姓名.张三>" | inu restore --entities entities.yaml`
@@ -236,6 +236,44 @@
 #### Scenario: 实体文件格式错误时报错
 - **WHEN** 用户提供的 `--entities` 文件不是有效的 YAML 格式
 - **THEN** 系统应该退出并显示清晰的解析错误信息
+
+#### Scenario: 还原包含额外空格的占位符
+- **WHEN** 用户执行 `echo "< 个人信息 [0]. 姓名. 张三 >" | inu restore --entities entities.yaml`
+- **AND** 实体文件包含标准格式的键 `<个人信息[0].姓名.张三>`
+- **THEN** 系统应该成功匹配并还原为原始值 "张三"
+- **AND** 输出应该是 "张三"（不是占位符）
+
+#### Scenario: 还原包含中文标点的占位符
+- **WHEN** 用户执行 `echo "<业务信息[2]。系统。名称>" | inu restore --entities entities.yaml`
+- **AND** 实体文件包含标准格式的键 `<业务信息[2].系统.名称>`
+- **THEN** 系统应该成功匹配并还原（中文标点 `。` 被归一化为 `.`）
+- **AND** 输出应该是原始值（不是占位符）
+
+#### Scenario: 还原包含全角字符的占位符
+- **WHEN** 用户执行 `echo "<账户信息[　０　].银行账户.６２２２０２１００１１２３４５６７８９>" | inu restore --entities entities.yaml`
+- **AND** 实体文件包含标准格式的键 `<账户信息[0].银行账户.6222021001123456789>`（半角数字）
+- **THEN** 系统应该成功匹配并还原（全角字符被归一化为半角）
+- **AND** 输出应该是原始值（不是占位符）
+
+#### Scenario: 还原混合格式变化的占位符
+- **WHEN** 用户执行 `echo "< 业务信息 [2]。 系统 。 名称 >" | inu restore --entities entities.yaml`
+- **AND** 实体文件包含标准格式的键 `<业务信息[2].系统.名称>`
+- **THEN** 系统应该成功匹配并还原（同时处理空格、中文标点）
+- **AND** 输出应该是原始值（不是占位符）
+
+#### Scenario: 部分占位符无法匹配时的行为
+- **WHEN** 用户执行 `echo "<个人信息[0].姓名.张三> and < unknown >" | inu restore --entities entities.yaml`
+- **AND** 实体文件只包含 `<个人信息[0].姓名.张三>`
+- **THEN** 系统应该还原已知占位符为 "张三"
+- **AND** 未知占位符保留原样 "< unknown >"
+- **AND** 输出应该是 "张三 and < unknown >"
+
+#### Scenario: 归一化不影响标准格式占位符
+- **WHEN** 用户执行 `echo "<个人信息[0].姓名.张三>" | inu restore --entities entities.yaml`
+- **AND** 实体文件包含标准格式的键 `<个人信息[0].姓名.张三>`
+- **THEN** 系统应该正常还原（归一化对标准格式无影响）
+- **AND** 输出应该是 "张三"
+- **AND** 行为与之前版本完全一致（向后兼容）
 
 ### Requirement: 错误处理和用户体验
 系统 SHALL 提供清晰的错误信息和良好的用户体验。
