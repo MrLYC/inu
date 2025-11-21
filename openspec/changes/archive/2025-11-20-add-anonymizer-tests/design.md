@@ -119,9 +119,9 @@ func TestAnonymizeText_Success(t *testing.T) {
     // 准备 mock
     mockLLM := &mockChatModel{
         response: newMockAnonymizeResponse(
-            "<个人信息[0].姓名.张三> lives in Beijing",
+            "<个人信息[0].姓名.全名> lives in Beijing",
             map[string][]string{
-                "<个人信息[0].姓名.张三>": {"张三"},
+                "<个人信息[0].姓名.全名>": {"张三"},
             },
         ),
     }
@@ -134,7 +134,7 @@ func TestAnonymizeText_Success(t *testing.T) {
     
     // 验证结果
     assert.NoError(t, err)
-    assert.Equal(t, "<个人信息[0].姓名.张三> lives in Beijing", result)
+    assert.Equal(t, "<个人信息[0].姓名.全名> lives in Beijing", result)
     assert.Len(t, entities, 1)
 }
 ```

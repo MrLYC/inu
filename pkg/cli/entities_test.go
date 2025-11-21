@@ -27,7 +27,7 @@ func TestSaveAndLoadEntities(t *testing.T) {
 	// Create test entities
 	testEntities := []*anonymizer.Entity{
 		{
-			Key:        "<个人信息[0].姓名.张三>",
+			Key:        "<个人信息[0].姓名.全名>",
 			EntityType: "个人信息",
 			ID:         "0",
 			Category:   "姓名",

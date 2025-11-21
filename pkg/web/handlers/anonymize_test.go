@@ -18,9 +18,9 @@ func TestAnonymizeHandler_Success(t *testing.T) {
 
 	mockAnon := &mockAnonymizer{
 		anonymizeFunc: func(ctx context.Context, types []string, text string) (string, []*anonymizer.Entity, error) {
-			return "<个人信息[0].姓名.张三>", []*anonymizer.Entity{
+			return "<个人信息[0].姓名.全名>", []*anonymizer.Entity{
 				{
-					Key:        "<个人信息[0].姓名.张三>",
+					Key:        "<个人信息[0].姓名.全名>",
 					EntityType: "个人信息",
 					ID:         "0",
 					Category:   "姓名",
@@ -54,7 +54,7 @@ func TestAnonymizeHandler_Success(t *testing.T) {
 		t.Fatalf("failed to parse response: %v", err)
 	}
 
-	if response.AnonymizedText != "<个人信息[0].姓名.张三>" {
+	if response.AnonymizedText != "<个人信息[0].姓名.全名>" {
 		t.Errorf("unexpected anonymized text: %s", response.AnonymizedText)
 	}
 

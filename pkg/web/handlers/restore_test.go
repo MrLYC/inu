@@ -26,10 +26,10 @@ func TestRestoreHandler_Success(t *testing.T) {
 	router.POST("/restore", RestoreHandler(mockAnon))
 
 	reqBody := RestoreRequest{
-		AnonymizedText: "<个人信息[0].姓名.张三>",
+		AnonymizedText: "<个人信息[0].姓名.全名>",
 		Entities: []*anonymizer.Entity{
 			{
-				Key:    "<个人信息[0].姓名.张三>",
+				Key:    "<个人信息[0].姓名.全名>",
 				Values: []string{"张三"},
 			},
 		},

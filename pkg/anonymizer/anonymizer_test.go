@@ -518,13 +518,13 @@ func TestNormalizePlaceholder(t *testing.T) {
 	}{
 		{
 			name:     "Standard format unchanged",
-			input:    "<个人信息[0].姓名.张三>",
-			expected: "<个人信息[0].姓名.张三>",
+			input:    "<个人信息[0].姓名.全名>",
+			expected: "<个人信息[0].姓名.全名>",
 		},
 		{
 			name:     "Remove extra spaces",
 			input:    "< 个人信息 [0]. 姓名. 张三 >",
-			expected: "<个人信息[0].姓名.张三>",
+			expected: "<个人信息[0].姓名.全名>",
 		},
 		{
 			name:     "Convert Chinese punctuation",
@@ -553,8 +553,8 @@ func TestNormalizePlaceholder(t *testing.T) {
 		},
 		{
 			name:     "Chinese brackets conversion",
-			input:    "<个人信息【0】.姓名.张三>",
-			expected: "<个人信息[0].姓名.张三>",
+			input:    "<个人信息【0】.姓名.全名>",
+			expected: "<个人信息[0].姓名.全名>",
 		},
 		{
 			name:     "Fullwidth numbers and symbols",
@@ -586,7 +586,7 @@ func TestRestoreText_FormatCompatibility(t *testing.T) {
 	// Standard entities with normalized keys
 	entities := []*Entity{
 		{
-			Key:        "<个人信息[0].姓名.张三>",
+			Key:        "<个人信息[0].姓名.全名>",
 			EntityType: "个人信息",
 			ID:         "0",
 			Category:   "姓名",
@@ -610,7 +610,7 @@ func TestRestoreText_FormatCompatibility(t *testing.T) {
 	}{
 		{
 			name:     "Standard format (backward compatibility)",
-			input:    "<个人信息[0].姓名.张三> works at company",
+			input:    "<个人信息[0].姓名.全名> works at company",
 			expected: "张三 works at company",
 		},
 		{
@@ -630,12 +630,12 @@ func TestRestoreText_FormatCompatibility(t *testing.T) {
 		},
 		{
 			name:     "Partial match - unknown placeholder preserved",
-			input:    "<个人信息[0].姓名.张三> and < unknown >",
+			input:    "<个人信息[0].姓名.全名> and < unknown >",
 			expected: "张三 and < unknown >",
 		},
 		{
 			name:     "Multiple placeholders",
-			input:    "<个人信息[0].姓名.张三> manages <业务信息[2].系统.名称>",
+			input:    "<个人信息[0].姓名.全名> manages <业务信息[2].系统.名称>",
 			expected: "张三 manages MySystem",
 		},
 		{

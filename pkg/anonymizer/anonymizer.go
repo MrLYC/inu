@@ -287,7 +287,7 @@ func (h *HasHidePair) RestoreText(ctx context.Context, entities []*Entity, text 
 // Examples:
 //   - < 业务信息 [2]. 系统。名称 > → <业务信息[2].系统.名称>
 //   - <　个人信息　[　０　].　姓名　> → <个人信息[0].姓名>
-//   - <个人信息[0].姓名.张三> → <个人信息[0].姓名.张三> (unchanged)
+//   - <个人信息[0].姓名.全名> → <个人信息[0].姓名.全名> (unchanged)
 //
 // If the input is not a valid placeholder (missing < or >), it returns unchanged.
 func normalizePlaceholder(placeholder string) string {

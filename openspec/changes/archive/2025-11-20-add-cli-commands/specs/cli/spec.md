@@ -56,8 +56,8 @@
 - **WHEN** 用户执行 `inu anonymize --content "张三的电话是 13800138000" --print-entities`
 - **THEN** 系统应该以简化格式打印实体信息到终端：
   ```
-  <个人信息[0].姓名.张三>: 张三
-  <个人信息[1].电话.13800138000>: 13800138000
+  <个人信息[0].姓名.全名>: 张三
+  <个人信息[1].电话.号码>: 13800138000
   ```
 
 #### Scenario: 输出实体信息到 YAML 文件
@@ -65,7 +65,7 @@
 - **THEN** 系统应该将实体信息以 YAML 格式写入文件：
   ```yaml
   entities:
-    - key: "<个人信息[0].姓名.张三>"
+    - key: "<个人信息[0].姓名.全名>"
       type: "个人信息"
       id: "0"
       category: "姓名"
@@ -86,7 +86,7 @@
 系统 SHALL 提供 `restore` 子命令来还原匿名化的文本。
 
 #### Scenario: 从标准输入读取匿名文本并还原
-- **WHEN** 用户执行 `echo "<个人信息[0].姓名.张三>" | inu restore --entities entities.yaml --print`
+- **WHEN** 用户执行 `echo "<个人信息[0].姓名.全名>" | inu restore --entities entities.yaml --print`
 - **THEN** 系统应该读取标准输入和实体文件，还原文本并打印
 
 #### Scenario: 从文件读取匿名文本
@@ -94,7 +94,7 @@
 - **THEN** 系统应该读取文件内容进行还原
 
 #### Scenario: 从命令行参数读取匿名文本
-- **WHEN** 用户执行 `inu restore --content "<个人信息[0].姓名.张三>" --entities entities.yaml --print`
+- **WHEN** 用户执行 `inu restore --content "<个人信息[0].姓名.全名>" --entities entities.yaml --print`
 - **THEN** 系统应该还原提供的内容字符串
 
 #### Scenario: 输入优先级

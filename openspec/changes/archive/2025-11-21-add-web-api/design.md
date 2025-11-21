@@ -150,10 +150,10 @@ GET  /health
 **Response** (200 OK):
 ```json
 {
-  "anonymized_text": "<个人信息[0].姓名.张三>的电话是<个人信息[1].电话.13800138000>",
+  "anonymized_text": "<个人信息[0].姓名.全名>的电话是<个人信息[1].电话.号码>",
   "entities": [
     {
-      "key": "<个人信息[0].姓名.张三>",
+      "key": "<个人信息[0].姓名.全名>",
       "type": "个人信息",
       "id": "0",
       "category": "姓名",
@@ -161,7 +161,7 @@ GET  /health
       "values": ["张三"]
     },
     {
-      "key": "<个人信息[1].电话.13800138000>",
+      "key": "<个人信息[1].电话.号码>",
       "type": "个人信息",
       "id": "1",
       "category": "电话",
@@ -187,10 +187,10 @@ GET  /health
 **Request**:
 ```json
 {
-  "anonymized_text": "<个人信息[0].姓名.张三>的电话是<个人信息[1].电话.13800138000>",
+  "anonymized_text": "<个人信息[0].姓名.全名>的电话是<个人信息[1].电话.号码>",
   "entities": [
     {
-      "key": "<个人信息[0].姓名.张三>",
+      "key": "<个人信息[0].姓名.全名>",
       "type": "个人信息",
       "id": "0",
       "category": "姓名",
@@ -198,7 +198,7 @@ GET  /health
       "values": ["张三"]
     },
     {
-      "key": "<个人信息[1].电话.13800138000>",
+      "key": "<个人信息[1].电话.号码>",
       "type": "个人信息",
       "id": "1",
       "category": "电话",
@@ -289,7 +289,7 @@ curl -X POST http://localhost:8080/api/v1/restore \
   -u admin:test123 \
   -H "Content-Type: application/json" \
   -d '{
-    "anonymized_text": "<个人信息[0].姓名.张三>的电话是<个人信息[1].电话.13800138000>",
+    "anonymized_text": "<个人信息[0].姓名.全名>的电话是<个人信息[1].电话.号码>",
     "entities": [...]
   }'
 ```
