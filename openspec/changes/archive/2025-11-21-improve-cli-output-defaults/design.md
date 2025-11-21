@@ -29,7 +29,7 @@
 
 **行为**:
 ```bash
-# stdout: 匿名化后的文本
+# stdout: 脱敏后的文本
 # stderr: 实体信息（如果有）
 inu anonymize -f input.txt
 

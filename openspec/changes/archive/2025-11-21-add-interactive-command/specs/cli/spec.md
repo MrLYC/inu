@@ -3,13 +3,13 @@
 ## ADDED Requirements
 
 ### Requirement: 交互式命令
-系统 SHALL 提供 `interactive` 子命令来执行交互式的匿名化和还原流程。
+系统 SHALL 提供 `interactive` 子命令来执行交互式的脱敏和还原流程。
 
 #### Scenario: 基本交互式流程
 - **WHEN** 用户执行 `inu interactive -f input.txt`
 - **THEN** 系统应该：
-  1. 读取并匿名化 input.txt 的内容
-  2. 将匿名化文本输出到 stdout
+  1. 读取并脱敏 input.txt 的内容
+  2. 将脱敏文本输出到 stdout
   3. 在 stderr 显示详细使用提示（如何输入、如何结束）
   4. 等待用户从 stdin 输入处理后的文本
   5. 用户按 Ctrl+D 后，使用内存中的实体信息还原文本
@@ -22,7 +22,7 @@
 
 #### Scenario: 指定实体类型
 - **WHEN** 用户执行 `inu interactive -c "张三在 ABC 公司工作" --entity-types "个人信息"`
-- **THEN** 系统应该只识别和匿名化 "个人信息" 类型的实体
+- **THEN** 系统应该只识别和脱敏 "个人信息" 类型的实体
 - **AND** 忽略其他类型（如 "组织机构"）
 
 #### Scenario: 自定义分隔符
@@ -41,7 +41,7 @@
   4. 持续循环直到用户 Ctrl+C 退出
 
 #### Scenario: 详细提示信息
-- **WHEN** 命令启动并完成匿名化
+- **WHEN** 命令启动并完成脱敏
 - **THEN** stderr 应该输出类似：
   ```
   === Anonymization Complete ===
@@ -78,7 +78,7 @@
 
 #### Scenario: 分离输出流
 - **WHEN** 用户执行 `inu interactive -f input.txt > output.txt 2> prompts.log`
-- **THEN** 匿名化文本和还原后文本应该写入 output.txt
+- **THEN** 脱敏文本和还原后文本应该写入 output.txt
 - **AND** 提示信息应该写入 prompts.log
 - **AND** 命令仍然等待 stdin 输入（终端交互）
 
@@ -92,7 +92,7 @@
 - **AND** 退出并显示非零状态码
 
 #### Scenario: LLM API 调用失败
-- **WHEN** 匿名化过程中 LLM API 调用失败
+- **WHEN** 脱敏过程中 LLM API 调用失败
 - **THEN** 系统应该显示错误："Error: Failed to anonymize text: <具体错误>"
 - **AND** 不进入等待输入阶段
 - **AND** 退出并显示非零状态码

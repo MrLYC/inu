@@ -8,7 +8,7 @@
 
 #### Scenario: 默认输出到 stdout - anonymize
 - **WHEN** 用户执行 `inu anonymize --file input.txt`
-- **THEN** 系统应该将匿名化后的文本输出到 stdout
+- **THEN** 系统应该将脱敏后的文本输出到 stdout
 - **AND** 不需要指定 `--print` 参数
 
 #### Scenario: 默认输出到 stdout - restore
@@ -24,26 +24,26 @@
 
 #### Scenario: 禁用所有输出
 - **WHEN** 用户执行 `inu anonymize --file input.txt --no-print`
-- **THEN** 系统不应该向 stdout 输出匿名化文本
+- **THEN** 系统不应该向 stdout 输出脱敏文本
 - **AND** 系统不应该向 stderr 输出实体信息
 - **AND** 进度信息仍然输出到 stderr
 
 #### Scenario: 同时输出到文件和终端
 - **WHEN** 用户执行 `inu anonymize --file input.txt --output result.txt`
-- **THEN** 系统应该将匿名化文本写入 result.txt
-- **AND** 同时将匿名化文本输出到 stdout
+- **THEN** 系统应该将脱敏文本写入 result.txt
+- **AND** 同时将脱敏文本输出到 stdout
 - **AND** 将实体信息输出到 stderr
 
 #### Scenario: 只输出到文件
 - **WHEN** 用户执行 `inu anonymize --file input.txt --output result.txt --no-print`
-- **THEN** 系统应该将匿名化文本写入 result.txt
+- **THEN** 系统应该将脱敏文本写入 result.txt
 - **AND** 不向 stdout 输出任何内容
 - **AND** 不向 stderr 输出实体信息
 - **AND** 进度信息仍然输出到 stderr
 
 #### Scenario: 管道操作 - 只传递主输出
 - **WHEN** 用户执行 `echo "张三" | inu anonymize | grep "个人信息"`
-- **THEN** 系统应该将匿名化文本传递给下一个命令
+- **THEN** 系统应该将脱敏文本传递给下一个命令
 - **AND** 实体信息不会干扰管道数据流（因为在 stderr）
 
 #### Scenario: 管道操作 - 合并输出流
@@ -53,18 +53,18 @@
 
 #### Scenario: 重定向 - 分离输出流
 - **WHEN** 用户执行 `inu anonymize -f input.txt > output.txt 2> entities.log`
-- **THEN** 系统应该将匿名化文本写入 output.txt
+- **THEN** 系统应该将脱敏文本写入 output.txt
 - **AND** 将实体信息和进度信息写入 entities.log
 
 #### Scenario: 重定向 - 只要主输出
 - **WHEN** 用户执行 `inu anonymize -f input.txt 2>/dev/null`
-- **THEN** 系统应该将匿名化文本输出到 stdout
+- **THEN** 系统应该将脱敏文本输出到 stdout
 - **AND** 丢弃所有 stderr 输出（实体信息、进度信息）
 
 #### Scenario: 重定向 - 只要实体信息
 - **WHEN** 用户执行 `inu anonymize -f input.txt 1>/dev/null`
 - **THEN** 系统应该将实体信息输出到 stderr
-- **AND** 丢弃 stdout 输出（匿名化文本）
+- **AND** 丢弃 stdout 输出（脱敏文本）
 
 ### Requirement: 进度信息输出
 系统 SHALL 将进度和状态信息输出到 stderr，不受 `--no-print` 影响。
@@ -97,7 +97,7 @@
 - **AND** 不应该包含 `--print` 参数
 
 ### Requirement: 命令行接口
-系统 SHALL 提供命令行接口来执行文本匿名化和还原操作。
+系统 SHALL 提供命令行接口来执行文本脱敏和还原操作。
 
 #### Scenario: 显示帮助信息
 - **WHEN** 用户执行 `inu --help` 或 `inu -h`
@@ -111,24 +111,24 @@
 - **WHEN** 用户执行 `inu anonymize --help` 或 `inu restore --help`
 - **THEN** 系统应该显示该子命令的详细使用说明和参数列表
 
-### Requirement: 匿名化命令
-系统 SHALL 提供 `anonymize` 子命令来匿名化文本中的敏感信息，使用流式输出改善用户体验。
+### Requirement: 脱敏命令
+系统 SHALL 提供 `anonymize` 子命令来脱敏文本中的敏感信息，使用流式输出改善用户体验。
 
 #### Scenario: 从标准输入读取并流式输出到标准输出
 - **WHEN** 用户执行 `echo "张三的电话是 13800138000" | inu anonymize`
-- **THEN** 系统应该读取标准输入，流式生成匿名化文本
+- **THEN** 系统应该读取标准输入，流式生成脱敏文本
 - **AND** 实时输出到标准输出（逐 token）
 - **AND** 在流式输出完成后，实体信息输出到 stderr
 
 #### Scenario: 从文件读取并流式输出
 - **WHEN** 用户执行 `inu anonymize --file input.txt`
 - **THEN** 系统应该读取 input.txt 文件的内容
-- **AND** 流式生成并输出匿名化文本到标准输出
+- **AND** 流式生成并输出脱敏文本到标准输出
 - **AND** 用户可以实时看到输出进度
 
 #### Scenario: 从命令行参数读取内容
 - **WHEN** 用户执行 `inu anonymize --content "张三的电话是 13800138000"`
-- **THEN** 系统应该使用提供的内容字符串进行匿名化并输出到标准输出
+- **THEN** 系统应该使用提供的内容字符串进行脱敏并输出到标准输出
 
 #### Scenario: 输入优先级
 - **WHEN** 用户同时指定 `--file`、`--content` 和标准输入
@@ -136,15 +136,15 @@
 
 #### Scenario: 指定实体类型
 - **WHEN** 用户执行 `inu anonymize --entity-types "个人信息,业务信息" --content "张三"`
-- **THEN** 系统应该只识别和匿名化指定的实体类型并输出到标准输出
+- **THEN** 系统应该只识别和脱敏指定的实体类型并输出到标准输出
 
 #### Scenario: 使用默认实体类型
 - **WHEN** 用户执行 `inu anonymize` 而不指定 `--entity-types`
 - **THEN** 系统应该使用默认实体类型列表：["个人信息", "业务信息", "资产信息", "账户信息", "位置数据", "文档名称", "组织机构", "岗位称谓"]
 
-#### Scenario: 输出匿名化文本到文件
+#### Scenario: 输出脱敏文本到文件
 - **WHEN** 用户执行 `inu anonymize --file input.txt --output result.txt`
-- **THEN** 系统应该流式生成匿名化文本
+- **THEN** 系统应该流式生成脱敏文本
 - **AND** 同时写入 result.txt 和 stdout
 - **AND** 两个输出目标都是流式写入
 
@@ -156,7 +156,7 @@
 
 #### Scenario: 只输出到文件不显示
 - **WHEN** 用户执行 `inu anonymize --content "text" --no-print --output result.txt`
-- **THEN** 系统应该只将匿名化文本写入文件，不输出到标准输出
+- **THEN** 系统应该只将脱敏文本写入文件，不输出到标准输出
 
 #### Scenario: 实体信息输出到 stderr（默认）
 - **WHEN** 用户执行 `inu anonymize --content "张三的电话是 13800138000"`
@@ -185,7 +185,7 @@
 - **THEN** 系统应该退出并显示错误：需要提供输入内容
 
 #### Scenario: API 调用失败时报错
-- **WHEN** 匿名化过程中 LLM API 调用失败（网络错误、认证失败等）
+- **WHEN** 脱敏过程中 LLM API 调用失败（网络错误、认证失败等）
 - **THEN** 系统应该退出并显示清晰的错误信息，包括失败原因
 
 #### Scenario: 流式输出被中断
@@ -202,7 +202,7 @@
 - **AND** 返回非零退出码
 
 ### Requirement: 还原命令
-系统 SHALL 提供 `restore` 子命令来还原匿名化的文本，支持占位符格式变化的容错匹配。
+系统 SHALL 提供 `restore` 子命令来还原脱敏的文本，支持占位符格式变化的容错匹配。
 
 #### Scenario: 从标准输入读取匿名文本并还原
 - **WHEN** 用户执行 `echo "<个人信息[0].姓名.全名>" | inu restore --entities entities.yaml`
@@ -295,13 +295,13 @@
 - **THEN** 系统应该在 stderr 显示进度提示（如 "Processing..." 或进度条）
 
 ### Requirement: 交互式命令
-系统 SHALL 提供 `interactive` 子命令来执行交互式的匿名化和还原流程。
+系统 SHALL 提供 `interactive` 子命令来执行交互式的脱敏和还原流程。
 
 #### Scenario: 基本交互式流程
 - **WHEN** 用户执行 `inu interactive -f input.txt`
 - **THEN** 系统应该：
-  1. 读取并匿名化 input.txt 的内容
-  2. 将匿名化文本输出到 stdout
+  1. 读取并脱敏 input.txt 的内容
+  2. 将脱敏文本输出到 stdout
   3. 在 stderr 显示详细使用提示（如何输入、如何结束）
   4. 等待用户从 stdin 输入处理后的文本
   5. 用户按 Ctrl+D 后，使用内存中的实体信息还原文本
@@ -314,7 +314,7 @@
 
 #### Scenario: 指定实体类型
 - **WHEN** 用户执行 `inu interactive -c "张三在 ABC 公司工作" --entity-types "个人信息"`
-- **THEN** 系统应该只识别和匿名化 "个人信息" 类型的实体
+- **THEN** 系统应该只识别和脱敏 "个人信息" 类型的实体
 - **AND** 忽略其他类型（如 "组织机构"）
 
 #### Scenario: 自定义分隔符
@@ -333,7 +333,7 @@
   4. 持续循环直到用户 Ctrl+C 退出
 
 #### Scenario: 详细提示信息
-- **WHEN** 命令启动并完成匿名化
+- **WHEN** 命令启动并完成脱敏
 - **THEN** stderr 应该输出类似：
   ```
   === Anonymization Complete ===
@@ -370,7 +370,7 @@
 
 #### Scenario: 分离输出流
 - **WHEN** 用户执行 `inu interactive -f input.txt > output.txt 2> prompts.log`
-- **THEN** 匿名化文本和还原后文本应该写入 output.txt
+- **THEN** 脱敏文本和还原后文本应该写入 output.txt
 - **AND** 提示信息应该写入 prompts.log
 - **AND** 命令仍然等待 stdin 输入（终端交互）
 
@@ -384,7 +384,7 @@
 - **AND** 退出并显示非零状态码
 
 #### Scenario: LLM API 调用失败
-- **WHEN** 匿名化过程中 LLM API 调用失败
+- **WHEN** 脱敏过程中 LLM API 调用失败
 - **THEN** 系统应该显示错误："Error: Failed to anonymize text: <具体错误>"
 - **AND** 不进入等待输入阶段
 - **AND** 退出并显示非零状态码

@@ -5,13 +5,13 @@
 
 ## What Changes
 - 实现两个 CLI 子命令：
-  - `inu anonymize`: 匿名化文本中的敏感信息
-  - `inu restore`: 还原匿名化的文本
+  - `inu anonymize`: 脱敏文本中的敏感信息
+  - `inu restore`: 还原脱敏的文本
 - 支持多种输入方式：文件（`--file`）、命令行参数（`--content`）、标准输入
 - 支持多种输出方式：终端打印（`--print`）、文件输出（`--output`）
 - 支持实体信息的输出和读取（YAML 格式）
 - 使用 cobra + viper 实现 CLI 框架和配置管理
-- 保留原有的核心匿名化逻辑，只改造入口层
+- 保留原有的核心脱敏逻辑，只改造入口层
 
 ## Impact
 - 影响的 specs: 新增 `cli` capability

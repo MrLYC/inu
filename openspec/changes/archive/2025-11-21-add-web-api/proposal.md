@@ -22,7 +22,7 @@ inu web [--addr 127.0.0.1:8080] [--admin-user admin] [--admin-token <token>]
 ```
 
 **新增 API 端点**:
-- `POST /api/v1/anonymize` - 匿名化文本
+- `POST /api/v1/anonymize` - 脱敏文本
 - `POST /api/v1/restore` - 还原文本
 - `GET /health` - 健康检查
 
@@ -32,7 +32,7 @@ inu web [--addr 127.0.0.1:8080] [--admin-user admin] [--admin-token <token>]
   - 新增 `cmd/inu/commands/web.go` - Web 命令实现
   - 新增 `pkg/web/` - Web 服务器和 API handlers
     - `pkg/web/server.go` - Gin 服务器初始化
-    - `pkg/web/handlers/anonymize.go` - 匿名化 API handler
+    - `pkg/web/handlers/anonymize.go` - 脱敏 API handler
     - `pkg/web/handlers/restore.go` - 还原 API handler
     - `pkg/web/middleware/auth.go` - 身份认证中间件
   - 修改 `cmd/inu/main.go` - 注册 web 命令

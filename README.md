@@ -4,13 +4,13 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Go Version](https://img.shields.io/badge/go-1.24.4-blue.svg)](https://golang.org/dl/)
 
-**Inu** 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够智能识别文本中的个人信息、联系方式、组织名称等敏感实体，将其替换为可追溯的占位符，并支持后续还原。
+**Inu** 是一个基于 AI 大模型的文本敏感信息脱敏工具。它能够智能识别文本中的个人信息、联系方式、组织名称等敏感实体，将其替换为可追溯的占位符，并支持后续还原。
 
 ## ✨ 特性
 
 - 🤖 **AI 驱动**：基于大语言模型（LLM）的智能实体识别
-- 🔒 **安全可靠**：敏感信息完全匿名化，保护隐私
-- 🔄 **可逆转换**：支持将匿名化文本还原为原始内容
+- 🔒 **安全可靠**：敏感信息完全脱敏，保护隐私
+- 🔄 **可逆转换**：支持将脱敏文本还原为原始内容
 - 🎯 **精准识别**：支持多种实体类型（人名、联系方式、地址、IP 等）
 - 🌐 **灵活配置**：支持自定义 LLM API endpoint（兼容 OpenAI API）
 - 🖥️ **CLI + Web API**：同时支持命令行工具和 HTTP API 服务
@@ -68,7 +68,7 @@ export OPENAI_BASE_URL="https://api.openai.com/v1"  # 可选，默认为 OpenAI
 
 ### 命令行使用
 
-#### 匿名化文本
+#### 脱敏文本
 
 从文件读取并输出到标准输出：
 ```bash
@@ -136,8 +136,8 @@ cat anonymized.txt | inu restore --entities entities.yaml > restored.txt
 inu interactive --file sensitive.txt
 
 # 工作流程：
-# 1. 命令输出匿名化文本（带分隔线标识）
-# 2. 复制匿名化文本，粘贴到 ChatGPT 进行处理（如总结、翻译）
+# 1. 命令输出脱敏文本（带分隔线标识）
+# 2. 复制脱敏文本，粘贴到 ChatGPT 进行处理（如总结、翻译）
 # 3. 复制 ChatGPT 的回复
 # 4. 粘贴回终端
 # 5. 按 Ctrl+D (Unix) 或 Ctrl+Z (Windows)
@@ -161,7 +161,7 @@ inu interactive -f input.txt --no-prompt
 ```bash
 inu interactive -f input.txt --entity-types "个人信息,业务信息"
 
-# 只匿名化指定类型的实体
+# 只脱敏指定类型的实体
 ```
 
 **显示效果示例**：
@@ -203,7 +203,7 @@ RESTORED TEXT:
 1. **与 ChatGPT 进行文档总结**
    ```bash
    $ inu interactive -f confidential-report.txt
-   # [看到匿名化文本，有清晰的分隔线]
+   # [看到脱敏文本，有清晰的分隔线]
    # [复制到 ChatGPT: "请总结这份报告"]
    # [粘贴 ChatGPT 的总结]
    # [按 Ctrl+D]
@@ -228,7 +228,7 @@ RESTORED TEXT:
 
 **优势**：
 - 🔒 **保护隐私**：敏感信息不会泄露给 ChatGPT
-- 🔄 **支持多次处理**：一次匿名化，多次使用不同 AI 服务
+- 🔄 **支持多次处理**：一次脱敏，多次使用不同 AI 服务
 - 🎯 **简单直观**：无需管理中间文件
 - 💾 **实体在内存**：整个流程在一个进程中完成
 - 📊 **清晰显示**：使用分隔线明确区分输入输出内容
@@ -296,7 +296,7 @@ inu web --addr 0.0.0.0:9090 \
   --entity-types "PERSON,ORG,EMAIL,PHONE,ADDRESS"
 ```
 
-服务器启动后，可以通过 Web 界面或 HTTP API 进行匿名化和还原操作。
+服务器启动后，可以通过 Web 界面或 HTTP API 进行脱敏和还原操作。
 
 #### Web 界面
 
@@ -307,8 +307,8 @@ inu web --addr 0.0.0.0:9090 \
 - 如果未设置 `--admin-token`，无需认证即可直接访问
 
 **功能特性：**
-- 🎨 **双视图模式**：匿名化视图和还原视图
-- 🔄 **实时处理**：即时匿名化和还原文本
+- 🎨 **双视图模式**：脱敏视图和还原视图
+- 🔄 **实时处理**：即时脱敏和还原文本
 - 💾 **会话状态**：自动保存实体映射到浏览器会话
 - 📱 **响应式设计**：支持桌面端和移动端
 - 🎯 **自定义实体类型**：支持添加自定义实体类型
@@ -316,11 +316,11 @@ inu web --addr 0.0.0.0:9090 \
 
 **使用流程：**
 
-1. **匿名化文本**
+1. **脱敏文本**
    - 选择要识别的实体类型（支持多选）
    - 在左侧输入框输入原始文本
-   - 点击"匿名化"按钮
-   - 在右侧查看匿名化结果
+   - 点击"脱敏"按钮
+   - 在右侧查看脱敏结果
    - 实体映射自动保存到浏览器会话
 
 2. **还原文本**
@@ -332,7 +332,7 @@ inu web --addr 0.0.0.0:9090 \
    - 可以多次还原不同的文本（实体保留）
 
 3. **多次处理**
-   - 一次匿名化，可以多次还原不同文本
+   - 一次脱敏，可以多次还原不同文本
    - 刷新页面后状态自动恢复（使用 sessionStorage）
    - 关闭标签页后数据自动清除
 
@@ -364,7 +364,7 @@ curl http://localhost:8080/api/v1/config \
 }
 ```
 
-**匿名化文本（需要认证）**
+**脱敏文本（需要认证）**
 ```bash
 curl -X POST http://localhost:8080/api/v1/anonymize \
   -u admin:your-secret-token \
@@ -488,13 +488,13 @@ func main() {
         log.Fatal(err)
     }
     
-    // 创建匿名化器
+    // 创建脱敏器
     anon, err := anonymizer.NewHashHidePair(llm)
     if err != nil {
         log.Fatal(err)
     }
     
-    // 匿名化文本
+    // 脱敏文本
     text := "张三的身份证号是 110101199001011234，他的电话号码是 13800138000。"
     types := []string{"个人信息", "业务信息", "资产信息", "账户信息", "位置数据", "文档名称", "组织机构", "岗位称谓"}
     
@@ -503,7 +503,7 @@ func main() {
         log.Fatal(err)
     }
     
-    log.Printf("匿名化结果: %s", result)
+    log.Printf("脱敏结果: %s", result)
     // 输出: <个人信息[0].姓名.全名> 的身份证号是 <个人信息[1].身份证.110101199001011234>...
     
     // 还原文本
@@ -541,7 +541,7 @@ inu/
 ├── cmd/inu/               # CLI 入口
 │   └── commands/          # CLI 子命令（anonymize, restore, web）
 ├── pkg/
-│   ├── anonymizer/        # 核心匿名化逻辑
+│   ├── anonymizer/        # 核心脱敏逻辑
 │   ├── cli/               # CLI 工具函数（输入输出、实体管理）
 │   └── web/               # Web API 服务器和 UI
 │       ├── handlers/      # HTTP handlers（anonymize, restore, health, config）
@@ -579,14 +579,14 @@ make lint
 
 ## 📋 路线图
 
-- [x] 核心匿名化和还原功能
+- [x] 核心脱敏和还原功能
 - [x] CLI 命令行工具（`inu anonymize` / `inu restore`）
 - [x] 多种输入方式（文件、命令行参数、标准输入）
 - [x] 实体 YAML 文件管理
 - [x] CI/CD 自动化构建和发布
 - [x] Web API 服务（`inu web`）
 - [x] HTTP 身份认证
-- [x] Web 界面（交互式匿名化和还原）
+- [x] Web 界面（交互式脱敏和还原）
 - [ ] 支持更多 LLM 提供商
 - [ ] 批量文件处理
 - [ ] 更丰富的配置文件支持

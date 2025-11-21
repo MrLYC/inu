@@ -1,7 +1,7 @@
 # Project Context
 
 ## Purpose
-Inu 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够识别文本中的个人信息、联系方式、组织名称等敏感实体，将其替换为占位符，并支持后续还原。主要应用场景包括：
+Inu 是一个基于 AI 大模型的文本敏感信息脱敏工具。它能够识别文本中的个人信息、联系方式、组织名称等敏感实体，将其替换为占位符，并支持后续还原。主要应用场景包括：
 - 数据脱敏处理
 - 日志安全存储
 - 测试数据生成
@@ -58,7 +58,7 @@ Inu 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够
 
 ## Domain Context
 ### 敏感信息类型
-默认支持识别和匿名化的实体类型包括：
+默认支持识别和脱敏的实体类型包括：
 - 个人信息：姓名、身份证号、电话号码等
 - 业务信息：业务数据、客户信息等
 - 资产信息：财产、资源信息等
@@ -71,11 +71,11 @@ Inu 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够
 用户可以通过 CLI 参数自定义实体类型。
 
 ### 实体格式
-匿名化后的占位符格式为：`<EntityType[ID].Category.Detail>`
+脱敏后的占位符格式为：`<EntityType[ID].Category.Detail>`
 - 示例：`<个人信息[0].姓名.全名>`
 
 ### CLI 命令
-- `inu anonymize`: 匿名化文本
+- `inu anonymize`: 脱敏文本
   - 输入：`--file` / `--content` / stdin（优先级递减）
   - 输出：`--print` 和/或 `--output`
   - 实体：`--output-entities` 保存到 YAML 文件
@@ -87,13 +87,13 @@ Inu 是一个基于 AI 大模型的文本敏感信息匿名化工具。它能够
   - 配置：`--addr` (监听地址), `--admin-user`, `--admin-token`
   - API 端点：
     - `GET /health` - 健康检查（无需认证）
-    - `POST /api/v1/anonymize` - 匿名化文本（需要认证）
+    - `POST /api/v1/anonymize` - 脱敏文本（需要认证）
     - `POST /api/v1/restore` - 还原文本（需要认证）
 
 ## Important Constraints
 - 依赖外部 LLM API（OpenAI 或兼容服务）
 - 需要配置环境变量：`OPENAI_API_KEY`, `OPENAI_MODEL_NAME`, `OPENAI_BASE_URL`
-- 匿名化质量依赖于 LLM 的能力
+- 脱敏质量依赖于 LLM 的能力
 
 ## External Dependencies
 - **CloudWeGo Eino**: AI 工具链框架

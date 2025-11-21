@@ -14,7 +14,7 @@
   - **实现说明**: 直接返回 buffer.String() 和 entities，无需二次解析
 - [x] 1.3 添加辅助函数 `parseAnonymizeResponse`
   - 接受完整响应 buffer
-  - 分离匿名化文本和实体映射
+  - 分离脱敏文本和实体映射
   - 解析 JSON 并构造 Entity 对象
   - **实现说明**: 使用 strings.SplitN 分割响应，正则解析 key 格式
 
@@ -93,7 +93,7 @@
 2. **Backward Compatibility**: `AnonymizeText` 基于流式实现，保持完全兼容
 3. **CLI Integration**: `anonymize` 命令使用流式 API，支持 `io.MultiWriter`
 4. **Error Handling**: 完整的错误处理，包括 Stream() fallback 到 Generate()
-5. **Response Filtering**: 实现 <<<PAIR>>> 标记检测，只输出匿名化文本
+5. **Response Filtering**: 实现 <<<PAIR>>> 标记检测，只输出脱敏文本
 
 ### Technical Decisions
 1. **Fallback Mechanism**: Stream() 失败时自动回退到 Generate()，确保测试可用性

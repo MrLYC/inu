@@ -19,11 +19,11 @@
 
 ## 3. 实现命令结构
 - [x] 3.1 创建 `cmd/inu/commands/` 目录
-- [x] 3.2 实现 `cmd/inu/commands/anonymize.go`：匿名化命令
+- [x] 3.2 实现 `cmd/inu/commands/anonymize.go`：脱敏命令
   - [x] 定义命令和所有 flags（file, content, entity-types, print, print-entities, output, output-entities）
   - [x] 实现命令执行逻辑
   - [x] 添加参数验证（至少有一种输入）
-  - [x] 集成 `pkg/anonymizer` 进行匿名化
+  - [x] 集成 `pkg/anonymizer` 进行脱敏
   - [x] 处理输出（文本和实体）
 - [x] 3.3 实现 `cmd/inu/commands/restore.go`：还原命令
   - [x] 定义命令和所有 flags（file, content, entities, print, output）
@@ -76,7 +76,7 @@
 - [x] 8.3 构建二进制文件：`make build`
 - [x] 8.4 验证编译的二进制文件可以正常运行
 - [x] 8.5 测试实际使用场景（端到端）
-  - [x] 创建测试文件，执行匿名化，保存实体
+  - [x] 创建测试文件，执行脱敏，保存实体
   - [x] 使用保存的实体还原文本
   - [x] 验证还原结果与原文一致
   - 注：已创建 `test_e2e.sh` 脚本用于端到端测试，需要配置 OpenAI API 密钥后执行

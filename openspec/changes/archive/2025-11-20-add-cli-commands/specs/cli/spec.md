@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: 命令行接口
-系统 SHALL 提供命令行接口来执行文本匿名化和还原操作。
+系统 SHALL 提供命令行接口来执行文本脱敏和还原操作。
 
 #### Scenario: 显示帮助信息
 - **WHEN** 用户执行 `inu --help` 或 `inu -h`
@@ -17,20 +17,20 @@
 - **WHEN** 用户执行 `inu anonymize --help` 或 `inu restore --help`
 - **THEN** 系统应该显示该子命令的详细使用说明和参数列表
 
-### Requirement: 匿名化命令
-系统 SHALL 提供 `anonymize` 子命令来匿名化文本中的敏感信息。
+### Requirement: 脱敏命令
+系统 SHALL 提供 `anonymize` 子命令来脱敏文本中的敏感信息。
 
 #### Scenario: 从标准输入读取并打印到标准输出
 - **WHEN** 用户执行 `echo "张三的电话是 13800138000" | inu anonymize --print`
-- **THEN** 系统应该读取标准输入，匿名化文本，并将结果打印到标准输出
+- **THEN** 系统应该读取标准输入，脱敏文本，并将结果打印到标准输出
 
 #### Scenario: 从文件读取内容
 - **WHEN** 用户执行 `inu anonymize --file input.txt --print`
-- **THEN** 系统应该读取 input.txt 文件的内容进行匿名化
+- **THEN** 系统应该读取 input.txt 文件的内容进行脱敏
 
 #### Scenario: 从命令行参数读取内容
 - **WHEN** 用户执行 `inu anonymize --content "张三的电话是 13800138000" --print`
-- **THEN** 系统应该使用提供的内容字符串进行匿名化
+- **THEN** 系统应该使用提供的内容字符串进行脱敏
 
 #### Scenario: 输入优先级
 - **WHEN** 用户同时指定 `--file`、`--content` 和标准输入
@@ -38,19 +38,19 @@
 
 #### Scenario: 指定实体类型
 - **WHEN** 用户执行 `inu anonymize --entity-types "个人信息,业务信息" --content "张三" --print`
-- **THEN** 系统应该只识别和匿名化指定的实体类型
+- **THEN** 系统应该只识别和脱敏指定的实体类型
 
 #### Scenario: 使用默认实体类型
 - **WHEN** 用户执行 `inu anonymize` 而不指定 `--entity-types`
 - **THEN** 系统应该使用默认实体类型列表：["个人信息", "业务信息", "资产信息", "账户信息", "位置数据", "文档名称", "组织机构", "岗位称谓"]
 
-#### Scenario: 输出匿名化文本到文件
+#### Scenario: 输出脱敏文本到文件
 - **WHEN** 用户执行 `inu anonymize --file input.txt --output result.txt`
-- **THEN** 系统应该将匿名化后的文本写入 result.txt 文件
+- **THEN** 系统应该将脱敏后的文本写入 result.txt 文件
 
 #### Scenario: 同时输出到终端和文件
 - **WHEN** 用户执行 `inu anonymize --content "text" --print --output result.txt`
-- **THEN** 系统应该同时将匿名化文本打印到终端并写入文件
+- **THEN** 系统应该同时将脱敏文本打印到终端并写入文件
 
 #### Scenario: 打印实体信息（简化格式）
 - **WHEN** 用户执行 `inu anonymize --content "张三的电话是 13800138000" --print-entities`
@@ -79,11 +79,11 @@
 - **THEN** 系统应该退出并显示错误：需要提供输入内容
 
 #### Scenario: API 调用失败时报错
-- **WHEN** 匿名化过程中 LLM API 调用失败（网络错误、认证失败等）
+- **WHEN** 脱敏过程中 LLM API 调用失败（网络错误、认证失败等）
 - **THEN** 系统应该退出并显示清晰的错误信息，包括失败原因
 
 ### Requirement: 还原命令
-系统 SHALL 提供 `restore` 子命令来还原匿名化的文本。
+系统 SHALL 提供 `restore` 子命令来还原脱敏的文本。
 
 #### Scenario: 从标准输入读取匿名文本并还原
 - **WHEN** 用户执行 `echo "<个人信息[0].姓名.全名>" | inu restore --entities entities.yaml --print`

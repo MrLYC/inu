@@ -63,7 +63,7 @@ TBD - created by archiving change standardize-project-structure. Update Purpose 
 #### Scenario: 核心逻辑分离
 - **WHEN** 查看项目结构
 - **THEN** 核心业务逻辑应该位于 `pkg/anonymizer/` 目录，包括：
-  - `anonymizer.go`：匿名化核心逻辑
+  - `anonymizer.go`：脱敏核心逻辑
   - `entity.go`：实体定义
   - `llm.go`：LLM 客户端封装
 

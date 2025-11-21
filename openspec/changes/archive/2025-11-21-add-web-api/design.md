@@ -1,7 +1,7 @@
 # Design: Web API Implementation
 
 ## Overview
-本设计文档描述如何为 Inu 添加基于 Gin 框架的 Web API，将现有的文本匿名化和还原功能封装为 RESTful API 端点。
+本设计文档描述如何为 Inu 添加基于 Gin 框架的 Web API，将现有的文本脱敏和还原功能封装为 RESTful API 端点。
 
 ## Architecture
 
@@ -23,7 +23,7 @@ inu
         ├── server.go (服务器实例和路由)
         ├── config.go (配置结构)
         ├── handlers/
-        │   ├── anonymize.go (匿名化 API)
+        │   ├── anonymize.go (脱敏 API)
         │   ├── restore.go (还原 API)
         │   └── health.go (健康检查)
         └── middleware/
@@ -137,7 +137,7 @@ GET  /health
 ## API Specification
 
 ### POST /api/v1/anonymize
-匿名化文本中的敏感信息。
+脱敏文本中的敏感信息。
 
 **Request**:
 ```json
@@ -182,7 +182,7 @@ GET  /health
 ```
 
 ### POST /api/v1/restore
-还原匿名化的文本。
+还原脱敏的文本。
 
 **Request**:
 ```json
@@ -278,7 +278,7 @@ inu web --admin-token test123
 # 2. 健康检查（无需认证）
 curl http://localhost:8080/health
 
-# 3. 匿名化（需要认证）
+# 3. 脱敏（需要认证）
 curl -X POST http://localhost:8080/api/v1/anonymize \
   -u admin:test123 \
   -H "Content-Type: application/json" \

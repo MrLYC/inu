@@ -2,13 +2,13 @@
 
 ## ADDED Requirements
 
-### Requirement: 流式匿名化输出
-系统 SHALL 在 LLM 生成匿名化文本时实时输出到 stdout，提供即时反馈。
+### Requirement: 流式脱敏输出
+系统 SHALL 在 LLM 生成脱敏文本时实时输出到 stdout，提供即时反馈。
 
-#### Scenario: 实时流式输出匿名化文本
+#### Scenario: 实时流式输出脱敏文本
 - **WHEN** 用户执行 `inu anonymize --file large_input.txt`
 - **THEN** 系统应该在 LLM 生成每个 token 时立即输出到 stdout
-- **AND** 用户可以实时看到匿名化进度
+- **AND** 用户可以实时看到脱敏进度
 - **AND** 不需要等待全部生成完成
 
 #### Scenario: 流式输出到文件
@@ -52,7 +52,7 @@
 系统 SHALL 通过流式输出降低首字节延迟和改善用户体验。
 
 #### Scenario: 首字节时间显著降低
-- **WHEN** 处理大文本（>1KB）进行匿名化
+- **WHEN** 处理大文本（>1KB）进行脱敏
 - **THEN** 首字节输出时间应该远小于完整生成时间
 - **AND** 用户在秒级内看到首批输出（而非等待数十秒）
 
@@ -69,24 +69,24 @@
 
 ## MODIFIED Requirements
 
-### Requirement: 匿名化命令
-系统 SHALL 提供 `anonymize` 子命令来匿名化文本中的敏感信息，使用流式输出改善用户体验。
+### Requirement: 脱敏命令
+系统 SHALL 提供 `anonymize` 子命令来脱敏文本中的敏感信息，使用流式输出改善用户体验。
 
 #### Scenario: 从标准输入读取并流式输出到标准输出
 - **WHEN** 用户执行 `echo "张三的电话是 13800138000" | inu anonymize`
-- **THEN** 系统应该读取标准输入，流式生成匿名化文本
+- **THEN** 系统应该读取标准输入，流式生成脱敏文本
 - **AND** 实时输出到标准输出（逐 token）
 - **AND** 在流式输出完成后，实体信息输出到 stderr
 
 #### Scenario: 从文件读取并流式输出
 - **WHEN** 用户执行 `inu anonymize --file input.txt`
 - **THEN** 系统应该读取 input.txt 文件的内容
-- **AND** 流式生成并输出匿名化文本到标准输出
+- **AND** 流式生成并输出脱敏文本到标准输出
 - **AND** 用户可以实时看到输出进度
 
 #### Scenario: 流式输出同时保存到文件
 - **WHEN** 用户执行 `inu anonymize --file input.txt --output result.txt`
-- **THEN** 系统应该流式生成匿名化文本
+- **THEN** 系统应该流式生成脱敏文本
 - **AND** 同时写入 result.txt 和 stdout
 - **AND** 两个输出目标都是流式写入
 

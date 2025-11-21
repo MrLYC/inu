@@ -64,7 +64,7 @@
 
 ## 7. 测试实现
 - [x] 7.1 创建 `pkg/web/handlers/anonymize_test.go`
-  - [x] 测试正常匿名化请求
+  - [x] 测试正常脱敏请求
   - [x] 测试空文本错误
   - [x] 测试 LLM 错误处理
   - [x] 测试无效 JSON 请求
@@ -86,7 +86,7 @@
   - [x] 添加 API 端点文档
   - [x] 添加 curl 示例
 - [ ] 8.2 创建 API 示例脚本（可选）
-  - [ ] `examples/api_anonymize.sh` - 匿名化示例
+  - [ ] `examples/api_anonymize.sh` - 脱敏示例
   - [ ] `examples/api_restore.sh` - 还原示例
 
 ## 9. 集成和验证
@@ -94,7 +94,7 @@
 - [x] 9.2 手动测试 Web 服务器
   - [x] 启动服务器：`inu web --admin-token test123`
   - [x] 测试健康检查：`curl http://localhost:8080/health`
-  - [x] 测试匿名化 API（带认证）
+  - [x] 测试脱敏 API（带认证）
   - [x] 测试还原 API
   - [x] 测试无认证访问（应返回 401）
 - [x] 9.3 验证与现有 CLI 命令的兼容性

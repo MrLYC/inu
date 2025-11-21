@@ -3,7 +3,7 @@
 ## Why
 当前 Inu 的 `anonymize` 和 `restore` 命令是独立运行的，用户需要：
 1. 运行 `anonymize` 保存实体文件
-2. 手动处理匿名化文本（如使用 ChatGPT 总结、翻译等）
+2. 手动处理脱敏文本（如使用 ChatGPT 总结、翻译等）
 3. 运行 `restore` 还原处理后的文本
 
 这个流程存在以下问题：
@@ -21,7 +21,7 @@
 ```bash
 # 场景 1: 与 ChatGPT 交互
 $ inu interactive -f sensitive-report.txt
-[复制匿名化文本到 ChatGPT 请求总结]
+[复制脱敏文本到 ChatGPT 请求总结]
 [复制 ChatGPT 的总结粘贴回终端]
 [得到还原后的总结]
 [继续请求翻译...]
@@ -34,8 +34,8 @@ END
 ```
 
 ## What Changes
-- 添加 `inu interactive` 子命令，提供交互式匿名化和还原流程
-- 支持单一交互模式：匿名化 → 循环等待输入 → 还原 → 继续等待
+- 添加 `inu interactive` 子命令，提供交互式脱敏和还原流程
+- 支持单一交互模式：脱敏 → 循环等待输入 → 还原 → 继续等待
 - 实体信息保存在内存中，不输出到文件或标准流
 - 支持自定义输入分隔符（类似 heredoc）
 
@@ -54,8 +54,8 @@ inu interactive -c "文本" --no-prompt
 **工作流程**:
 ```
 1. 读取原始文本（从 --file / --content / stdin）
-2. 调用 LLM 进行匿名化
-3. 输出匿名化文本到 stdout
+2. 调用 LLM 进行脱敏
+3. 输出脱敏文本到 stdout
 4. 在 stderr 显示详细使用提示
 5. 循环：
    a. 等待从 stdin 读取处理后的文本

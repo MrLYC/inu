@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: 还原命令
-系统 SHALL 提供 `restore` 子命令来还原匿名化的文本，支持占位符格式变化的容错匹配。
+系统 SHALL 提供 `restore` 子命令来还原脱敏的文本，支持占位符格式变化的容错匹配。
 
 #### Scenario: 从标准输入读取匿名文本并还原
 - **WHEN** 用户执行 `echo "<个人信息[0].姓名.全名>" | inu restore --entities entities.yaml`

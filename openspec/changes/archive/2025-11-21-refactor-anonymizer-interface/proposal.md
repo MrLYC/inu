@@ -4,7 +4,7 @@
 当前 `Anonymizer` 是一个具体的 struct 实现，直接依赖 LLM 和特定的响应格式（`<<<PAIR>>>`）。这种设计存在以下问题：
 
 **现有问题**：
-1. **扩展性差**：无法轻松添加其他匿名化策略（如基于规则、基于字典等）
+1. **扩展性差**：无法轻松添加其他脱敏策略（如基于规则、基于字典等）
 2. **测试困难**：Web handlers 和 CLI 直接依赖具体实现，难以进行单元测试
 3. **命名不清晰**：当前实现紧密耦合了 `<<<PAIR>>>` 格式，但名称未体现这一特点
 4. **违反依赖倒置原则**：高层模块（handlers, commands）依赖低层实现细节
@@ -24,7 +24,7 @@
 
 **接口定义**：
 ```go
-// Anonymizer 定义文本匿名化的核心接口
+// Anonymizer 定义文本脱敏的核心接口
 type Anonymizer interface {
     AnonymizeText(ctx context.Context, types []string, text string) (string, []*Entity, error)
     AnonymizeTextStream(ctx context.Context, types []string, text string, writer io.Writer) ([]*Entity, error)

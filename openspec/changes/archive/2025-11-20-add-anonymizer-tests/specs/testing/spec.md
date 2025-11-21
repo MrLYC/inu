@@ -5,19 +5,19 @@
 ### Requirement: Anonymizer 单元测试
 系统 SHALL 为 `pkg/anonymizer` 包提供完整的单元测试覆盖，使用 mock 避免真实 LLM API 调用。
 
-#### Scenario: 测试匿名化单个实体
-- **WHEN** 调用 `AnonymizeText` 匿名化包含一个实体的文本
-- **THEN** 系统应该返回匿名化后的文本和对应的实体信息
+#### Scenario: 测试脱敏单个实体
+- **WHEN** 调用 `AnonymizeText` 脱敏包含一个实体的文本
+- **THEN** 系统应该返回脱敏后的文本和对应的实体信息
 
-#### Scenario: 测试匿名化多个实体
-- **WHEN** 调用 `AnonymizeText` 匿名化包含多种实体类型的文本
-- **THEN** 系统应该正确识别并匿名化所有实体，返回完整的实体列表
+#### Scenario: 测试脱敏多个实体
+- **WHEN** 调用 `AnonymizeText` 脱敏包含多种实体类型的文本
+- **THEN** 系统应该正确识别并脱敏所有实体，返回完整的实体列表
 
-#### Scenario: 测试匿名化空文本
+#### Scenario: 测试脱敏空文本
 - **WHEN** 调用 `AnonymizeText` 时输入为空字符串
 - **THEN** 系统应该正确处理并返回空结果或适当的响应
 
-#### Scenario: 测试匿名化无匹配实体
+#### Scenario: 测试脱敏无匹配实体
 - **WHEN** LLM 返回无匹配实体（"None"）
 - **THEN** 系统应该返回原文本和空实体列表，不报错
 
@@ -65,7 +65,7 @@
 - **THEN** 系统应该跳过该实体，继续处理其他实体
 
 #### Scenario: 测试完整往返
-- **WHEN** 对文本执行匿名化后再执行还原
+- **WHEN** 对文本执行脱敏后再执行还原
 - **THEN** 还原后的文本应该与原文本完全一致
 
 ### Requirement: Mock LLM 实现
@@ -81,7 +81,7 @@
 
 #### Scenario: Mock 响应格式可配置
 - **WHEN** 测试需要不同格式的 LLM 响应
-- **THEN** mock 应该支持灵活配置响应内容（匿名化文本、实体映射）
+- **THEN** mock 应该支持灵活配置响应内容（脱敏文本、实体映射）
 
 #### Scenario: Mock 不需要环境变量
 - **WHEN** 运行使用 mock 的测试

@@ -4,7 +4,7 @@
 当前 Anonymizer 使用 CloudWeGo Eino 的 `BaseChatModel.Generate()` 方法，该方法等待 LLM 完整生成响应后一次性返回。Eino 同时提供了 `BaseChatModel.Stream()` 方法，返回 `*schema.StreamReader[*schema.Message]`，支持逐 token 读取。
 
 **技术约束**：
-- LLM 响应格式：`<匿名化文本>\n<<<PAIR>>>\n<JSON映射>`
+- LLM 响应格式：`<脱敏文本>\n<<<PAIR>>>\n<JSON映射>`
 - 需要完整读取才能解析实体映射
 - CLI 默认输出到 stdout，需要实时显示进度
 - 测试使用 mock LLM，需要支持流式 mock
@@ -12,9 +12,9 @@
 ## Goals / Non-Goals
 
 **Goals**：
-- 提供流式匿名化 API，降低 TTFB 和内存占用
+- 提供流式脱敏 API，降低 TTFB 和内存占用
 - 保持现有 API 完全兼容
-- CLI 实时输出匿名化文本，改善用户体验
+- CLI 实时输出脱敏文本，改善用户体验
 - 支持流式测试验证
 
 **Non-Goals**：

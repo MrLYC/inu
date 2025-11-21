@@ -16,7 +16,7 @@
 - 保持兼容：现有 API 继续可用，基于流式实现
 
 ## What Changes
-- **添加** `AnonymizeTextStream` 方法：接受 `io.Writer` 参数，流式输出匿名化文本
+- **添加** `AnonymizeTextStream` 方法：接受 `io.Writer` 参数，流式输出脱敏文本
 - **重构** `AnonymizeText` 方法：基于 `AnonymizeTextStream` 实现，保持向后兼容
 - **修改** CLI `anonymize` 命令：使用流式 API，实时输出到 stdout
 - **保持** Web API 不变：暂不支持流式响应（未来可选 SSE）

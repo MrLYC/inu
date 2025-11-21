@@ -36,26 +36,26 @@ import (
 // placeholderRegex matches placeholder patterns like <...>
 var placeholderRegex = regexp.MustCompile(`<[^>]+>`)
 
-// Anonymizer 定义文本敏感信息匿名化的核心接口。
+// Anonymizer 定义文本敏感信息脱敏的核心接口。
 // 实现此接口的类型应当能够：
 //  1. 将原始文本中的敏感实体替换为占位符
 //  2. 记录实体映射关系以支持还原
 //  3. 支持流式输出以改善用户体验
 type Anonymizer interface {
-	// AnonymizeText 批量匿名化文本，返回完整结果
+	// AnonymizeText 批量脱敏文本，返回完整结果
 	AnonymizeText(ctx context.Context, types []string, text string) (string, []*Entity, error)
 
-	// AnonymizeTextStream 流式匿名化文本，实时写入 writer
+	// AnonymizeTextStream 流式脱敏文本，实时写入 writer
 	AnonymizeTextStream(ctx context.Context, types []string, text string, writer io.Writer) ([]*Entity, error)
 
-	// RestoreText 使用实体映射还原匿名化文本
+	// RestoreText 使用实体映射还原脱敏文本
 	RestoreText(ctx context.Context, entities []*Entity, text string) (string, error)
 }
 
 // HasHidePair 是基于 <<<PAIR>>> 分隔符格式的 Anonymizer 实现。
-// 它使用 LLM 生成匿名化文本和实体映射，响应格式为：
+// 它使用 LLM 生成脱敏文本和实体映射，响应格式为：
 //
-//	<匿名化文本>
+//	<脱敏文本>
 //	<<<PAIR>>>
 //	<JSON 映射>
 //
@@ -331,7 +331,7 @@ func normalizePlaceholder(placeholder string) string {
 }
 
 // NewHashHidePair 创建一个基于 <<<PAIR>>> 格式的 Anonymizer 实现。
-// 该实现使用 LLM 进行文本匿名化，响应格式为匿名化文本和 JSON 映射由 <<<PAIR>>> 分隔。
+// 该实现使用 LLM 进行文本脱敏，响应格式为脱敏文本和 JSON 映射由 <<<PAIR>>> 分隔。
 func NewHashHidePair(chatModel model.BaseChatModel) (Anonymizer, error) {
 	anonymizeTemplate := prompt.FromMessages(schema.FString,
 		schema.UserMessage(`Anonymize the text with the given entity types, then output the tag-to-original mapping; if nothing is found, reply "None".

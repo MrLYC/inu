@@ -10,7 +10,7 @@
 
 #### Scenario: 默认输出到 stdout - anonymize
 - **WHEN** 用户执行 `inu anonymize --file input.txt`
-- **THEN** 系统应该将匿名化后的文本输出到 stdout
+- **THEN** 系统应该将脱敏后的文本输出到 stdout
 - **AND** 不需要指定 `--print` 参数
 
 #### Scenario: 默认输出到 stdout - restore
@@ -26,26 +26,26 @@
 
 #### Scenario: 禁用所有输出
 - **WHEN** 用户执行 `inu anonymize --file input.txt --no-print`
-- **THEN** 系统不应该向 stdout 输出匿名化文本
+- **THEN** 系统不应该向 stdout 输出脱敏文本
 - **AND** 系统不应该向 stderr 输出实体信息
 - **AND** 进度信息仍然输出到 stderr
 
 #### Scenario: 同时输出到文件和终端
 - **WHEN** 用户执行 `inu anonymize --file input.txt --output result.txt`
-- **THEN** 系统应该将匿名化文本写入 result.txt
-- **AND** 同时将匿名化文本输出到 stdout
+- **THEN** 系统应该将脱敏文本写入 result.txt
+- **AND** 同时将脱敏文本输出到 stdout
 - **AND** 将实体信息输出到 stderr
 
 #### Scenario: 只输出到文件
 - **WHEN** 用户执行 `inu anonymize --file input.txt --output result.txt --no-print`
-- **THEN** 系统应该将匿名化文本写入 result.txt
+- **THEN** 系统应该将脱敏文本写入 result.txt
 - **AND** 不向 stdout 输出任何内容
 - **AND** 不向 stderr 输出实体信息
 - **AND** 进度信息仍然输出到 stderr
 
 #### Scenario: 管道操作 - 只传递主输出
 - **WHEN** 用户执行 `echo "张三" | inu anonymize | grep "个人信息"`
-- **THEN** 系统应该将匿名化文本传递给下一个命令
+- **THEN** 系统应该将脱敏文本传递给下一个命令
 - **AND** 实体信息不会干扰管道数据流（因为在 stderr）
 
 #### Scenario: 管道操作 - 合并输出流
@@ -55,18 +55,18 @@
 
 #### Scenario: 重定向 - 分离输出流
 - **WHEN** 用户执行 `inu anonymize -f input.txt > output.txt 2> entities.log`
-- **THEN** 系统应该将匿名化文本写入 output.txt
+- **THEN** 系统应该将脱敏文本写入 output.txt
 - **AND** 将实体信息和进度信息写入 entities.log
 
 #### Scenario: 重定向 - 只要主输出
 - **WHEN** 用户执行 `inu anonymize -f input.txt 2>/dev/null`
-- **THEN** 系统应该将匿名化文本输出到 stdout
+- **THEN** 系统应该将脱敏文本输出到 stdout
 - **AND** 丢弃所有 stderr 输出（实体信息、进度信息）
 
 #### Scenario: 重定向 - 只要实体信息
 - **WHEN** 用户执行 `inu anonymize -f input.txt 1>/dev/null`
 - **THEN** 系统应该将实体信息输出到 stderr
-- **AND** 丢弃 stdout 输出（匿名化文本）
+- **AND** 丢弃 stdout 输出（脱敏文本）
 
 ### Requirement: 进度信息输出
 系统 SHALL 将进度和状态信息输出到 stderr，不受 `--no-print` 影响。
@@ -107,7 +107,7 @@
 
 #### Scenario: ~~使用 --print 输出~~（已移除）
 ~~- **WHEN** 用户执行 `inu anonymize --file input.txt --print`~~
-~~- **THEN** 系统应该将匿名化文本输出到 stdout~~
+~~- **THEN** 系统应该将脱敏文本输出到 stdout~~
 
 ### Requirement: --print-entities 参数（已移除）
 ~~系统 SHALL 提供 `--print-entities` 参数来控制是否输出实体信息。~~

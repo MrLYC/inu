@@ -4,18 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inu - 文本匿名化工具</title>
+    <title>Inu - 文本脱敏工具</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 
 <body>
     <div class="container">
         <header>
-            <h1>Inu 文本匿名化</h1>
+            <h1>Inu🐕 文本脱敏工具</h1>
             <p class="subtitle">智能实体识别与隐私保护</p>
         </header>
 
-        <!-- 匿名化视图 -->
+        <!-- 脱敏视图 -->
         <div id="anonymize-view" class="view">
             <div class="entity-selector">
                 <label for="entity-types">实体类型:</label>
@@ -28,17 +28,17 @@
             <div class="panels">
                 <div class="panel">
                     <h3>输入文本</h3>
-                    <textarea id="input-text" placeholder="在此输入需要匿名化的文本..."></textarea>
+                    <textarea id="input-text" placeholder="在此输入需要脱敏的文本..."></textarea>
                 </div>
                 <div class="panel">
-                    <h3>匿名化输出</h3>
+                    <h3>脱敏输出</h3>
                     <div id="output-text" class="output"></div>
                 </div>
             </div>
 
             <div class="actions">
-                <button id="anonymize-btn" class="btn-primary">匿名化</button>
-                <button id="switch-to-restore-btn" class="btn-secondary" style="display: none;">切换到还原模式</button>
+                <button id="anonymize-btn" class="btn-primary">脱敏</button>
+                <button id="switch-to-restore-btn" class="btn-secondary" style="display: none;">还原模式</button>
             </div>
         </div>
 
@@ -51,7 +51,7 @@
 
             <div class="panels">
                 <div class="panel">
-                    <h3>匿名化文本</h3>
+                    <h3>脱敏文本</h3>
                     <div id="anonymized-text-display" class="output"></div>
                 </div>
                 <div class="panel">
@@ -62,7 +62,7 @@
 
             <div class="actions">
                 <button id="restore-btn" class="btn-primary">还原</button>
-                <button id="back-to-anonymize-btn" class="btn-secondary">返回匿名化</button>
+                <button id="back-to-anonymize-btn" class="btn-secondary">脱敏模式</button>
             </div>
         </div>
 

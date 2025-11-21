@@ -8,7 +8,7 @@
 
     // DOM 元素引用
     const elements = {
-        // 匿名化视图
+        // 脱敏视图
         anonymizeView: document.getElementById('anonymize-view'),
         entityTypes: document.getElementById('entity-types'),
         addCustomTypeBtn: document.getElementById('add-custom-type'),
@@ -75,7 +75,7 @@
         });
     }
 
-    // ========== 匿名化逻辑 ==========
+    // ========== 脱敏逻辑 ==========
     async function handleAnonymize() {
         const text = elements.inputText.value.trim();
 
@@ -160,7 +160,7 @@
         // 从 sessionStorage 获取实体映射
         const state = loadStateFromSession();
         if (!state || !state.entities) {
-            alert('错误: 未找到实体映射。请先执行匿名化操作。');
+            alert('错误: 未找到实体映射。请先执行脱敏操作。');
             return;
         }
 
@@ -203,14 +203,14 @@
     function switchToRestoreView() {
         const state = loadStateFromSession();
         if (!state) {
-            alert('错误: 未找到匿名化数据');
+            alert('错误: 未找到脱敏数据');
             return;
         }
 
         // 显示实体映射
         displayEntityMappings(state.entities);
 
-        // 显示匿名化文本
+        // 显示脱敏文本
         elements.anonymizedTextDisplay.textContent = state.anonymizedText;
 
         // 切换视图
@@ -221,7 +221,7 @@
     function switchToAnonymizeView() {
         const state = loadStateFromSession();
 
-        // 恢复原始文本和匿名化结果
+        // 恢复原始文本和脱敏结果
         if (state) {
             elements.inputText.value = state.originalText || '';
             elements.outputText.textContent = state.anonymizedText || '';
@@ -236,16 +236,23 @@
     function displayEntityMappings(entities) {
         elements.entityMappingsDisplay.innerHTML = '';
 
-        for (const [placeholder, value] of Object.entries(entities)) {
+        if (!entities || entities.length === 0) {
+            elements.entityMappingsDisplay.textContent = '无实体映射';
+            return;
+        }
+
+        entities.forEach(entity => {
             const item = document.createElement('div');
             item.className = 'mapping-item';
+            // 显示 key -> values 格式
+            const valuesStr = Array.isArray(entity.values) ? entity.values.join(', ') : String(entity.values);
             item.innerHTML = `
-                <span class="placeholder">${escapeHtml(placeholder)}</span>
+                <span class="placeholder">${escapeHtml(entity.key)}</span>
                 <span class="arrow">→</span>
-                <span class="value">${escapeHtml(value)}</span>
+                <span class="value">${escapeHtml(valuesStr)}</span>
             `;
             elements.entityMappingsDisplay.appendChild(item);
-        }
+        });
     }
 
     // ========== 自定义实体类型 ==========

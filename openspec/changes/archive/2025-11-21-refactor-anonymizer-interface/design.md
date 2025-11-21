@@ -1,7 +1,7 @@
 # Refactor Anonymizer to Interface - Design
 
 ## Context
-当前 `Anonymizer` 是一个具体的 struct，包含 LLM 客户端和 prompt 模板，使用 `<<<PAIR>>>` 格式分隔匿名化文本和实体映射。虽然 Web handlers 已经定义了局部接口（好的设计），但核心包仍然暴露具体类型，限制了扩展性。
+当前 `Anonymizer` 是一个具体的 struct，包含 LLM 客户端和 prompt 模板，使用 `<<<PAIR>>>` 格式分隔脱敏文本和实体映射。虽然 Web handlers 已经定义了局部接口（好的设计），但核心包仍然暴露具体类型，限制了扩展性。
 
 **当前架构**：
 ```
@@ -34,7 +34,7 @@ CloudWeGo Eino LLM
 - 为未来扩展其他实现铺路
 
 **Non-Goals**：
-- 不添加新的匿名化策略（本次仅重构）
+- 不添加新的脱敏策略（本次仅重构）
 - 不修改 `<<<PAIR>>>` 格式或解析逻辑
 - 不改变 Web API 或 CLI 的行为
 - 不修改测试用例的逻辑（只调整构造调用）
@@ -184,19 +184,19 @@ type Server struct {
 
 ### 接口定义建议
 ```go
-// Anonymizer 定义文本敏感信息匿名化的核心接口。
+// Anonymizer 定义文本敏感信息脱敏的核心接口。
 // 实现此接口的类型应当能够：
 //  1. 将原始文本中的敏感实体替换为占位符
 //  2. 记录实体映射关系以支持还原
 //  3. 支持流式输出以改善用户体验
 type Anonymizer interface {
-    // AnonymizeText 批量匿名化文本，返回完整结果
+    // AnonymizeText 批量脱敏文本，返回完整结果
     AnonymizeText(ctx context.Context, types []string, text string) (string, []*Entity, error)
     
-    // AnonymizeTextStream 流式匿名化文本，实时写入 writer
+    // AnonymizeTextStream 流式脱敏文本，实时写入 writer
     AnonymizeTextStream(ctx context.Context, types []string, text string, writer io.Writer) ([]*Entity, error)
     
-    // RestoreText 使用实体映射还原匿名化文本
+    // RestoreText 使用实体映射还原脱敏文本
     RestoreText(ctx context.Context, entities []*Entity, text string) (string, error)
 }
 ```
@@ -204,8 +204,8 @@ type Anonymizer interface {
 ### HasHidePair 注释建议
 ```go
 // HasHidePair 是基于 <<<PAIR>>> 分隔符格式的 Anonymizer 实现。
-// 它使用 LLM 生成匿名化文本和实体映射，响应格式为：
-//   <匿名化文本>
+// 它使用 LLM 生成脱敏文本和实体映射，响应格式为：
+//   <脱敏文本>
 //   <<<PAIR>>>
 //   <JSON 映射>
 // 此实现支持流式输出，在遇到 <<<PAIR>>> 标记前将 token 实时写入输出。

@@ -100,7 +100,7 @@ func (m *mockChatModel) Generate(ctx context.Context, messages []*schema.Message
 
 ### 响应构造辅助
 ```go
-// 构造标准匿名化响应
+// 构造标准脱敏响应
 func newMockAnonymizeResponse(anonymizedText string, mapping map[string][]string) *schema.Message {
     mappingJSON, _ := json.Marshal(mapping)
     content := fmt.Sprintf("%s\n<<<PAIR>>>\n%s", anonymizedText, mappingJSON)
@@ -126,7 +126,7 @@ func TestAnonymizeText_Success(t *testing.T) {
         ),
     }
     
-    // 创建匿名化器
+    // 创建脱敏器
     anon, _ := New(mockLLM)
     
     // 执行测试

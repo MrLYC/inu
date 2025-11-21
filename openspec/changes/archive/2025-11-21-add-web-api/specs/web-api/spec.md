@@ -1,7 +1,7 @@
 # web-api Specification
 
 ## Purpose
-定义 Inu 的 Web API 功能规范，提供基于 HTTP 的文本匿名化和还原服务。
+定义 Inu 的 Web API 功能规范，提供基于 HTTP 的文本脱敏和还原服务。
 
 ## ADDED Requirements
 
@@ -47,10 +47,10 @@
 - **WHEN** 用户执行 `inu web --admin-token secret123` 但未设置 OPENAI_API_KEY
 - **THEN** 系统应该显示友好的错误信息，说明需要配置的环境变量
 
-### Requirement: 匿名化 API 端点
-系统 SHALL 提供 `POST /api/v1/anonymize` 端点来匿名化文本。
+### Requirement: 脱敏 API 端点
+系统 SHALL 提供 `POST /api/v1/anonymize` 端点来脱敏文本。
 
-#### Scenario: 成功匿名化单个实体
+#### Scenario: 成功脱敏单个实体
 - **GIVEN** 客户端已通过 HTTP Basic Auth 认证
 - **WHEN** 客户端发送 POST 请求到 `/api/v1/anonymize`：
   ```json
@@ -58,7 +58,7 @@
     "text": "张三的电话是 13800138000"
   }
   ```
-- **THEN** 系统应该返回 200 OK 和匿名化结果：
+- **THEN** 系统应该返回 200 OK 和脱敏结果：
   ```json
   {
     "anonymized_text": "<个人信息[0].姓名.全名>的电话是<个人信息[1].电话.号码>",
@@ -91,7 +91,7 @@
     "entity_types": ["个人信息"]
   }
   ```
-- **THEN** 系统应该只识别和匿名化 "个人信息" 类型的实体
+- **THEN** 系统应该只识别和脱敏 "个人信息" 类型的实体
 - **AND** 忽略 "组织机构" 类型（ABC 公司）
 
 #### Scenario: 使用默认实体类型
@@ -134,7 +134,7 @@
 - **THEN** 系统应该返回 400 Bad Request 和 JSON 解析错误信息
 
 #### Scenario: LLM API 调用失败
-- **WHEN** 匿名化过程中 LLM API 调用失败
+- **WHEN** 脱敏过程中 LLM API 调用失败
 - **THEN** 系统应该返回 500 Internal Server Error：
   ```json
   {
@@ -155,7 +155,7 @@
   ```
 
 ### Requirement: 还原 API 端点
-系统 SHALL 提供 `POST /api/v1/restore` 端点来还原匿名化文本。
+系统 SHALL 提供 `POST /api/v1/restore` 端点来还原脱敏文本。
 
 #### Scenario: 成功还原文本
 - **GIVEN** 客户端已通过认证
@@ -197,7 +197,7 @@
   }
   ```
 
-#### Scenario: 空匿名化文本
+#### Scenario: 空脱敏文本
 - **WHEN** 客户端发送空的 `anonymized_text`
 - **THEN** 系统应该返回 400 Bad Request：
   ```json
