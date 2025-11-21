@@ -508,3 +508,187 @@ func TestNew_Success(t *testing.T) {
 		t.Error("Expected non-nil anonymizeTemplate field")
 	}
 }
+
+// TestNormalizePlaceholder tests placeholder normalization with various format variations.
+func TestNormalizePlaceholder(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Standard format unchanged",
+			input:    "<个人信息[0].姓名.张三>",
+			expected: "<个人信息[0].姓名.张三>",
+		},
+		{
+			name:     "Remove extra spaces",
+			input:    "< 个人信息 [0]. 姓名. 张三 >",
+			expected: "<个人信息[0].姓名.张三>",
+		},
+		{
+			name:     "Convert Chinese punctuation",
+			input:    "<业务信息[2]。系统。名称>",
+			expected: "<业务信息[2].系统.名称>",
+		},
+		{
+			name:     "Convert fullwidth characters",
+			input:    "<账户信息[　０　].银行>",
+			expected: "<账户信息[0].银行>",
+		},
+		{
+			name:     "Mixed changes - spaces and punctuation",
+			input:    "< 业务信息 [2]。 系统 。 名称 >",
+			expected: "<业务信息[2].系统.名称>",
+		},
+		{
+			name:     "Non-placeholder text unchanged",
+			input:    "not a placeholder",
+			expected: "not a placeholder",
+		},
+		{
+			name:     "Incomplete placeholder unchanged",
+			input:    "<incomplete",
+			expected: "<incomplete",
+		},
+		{
+			name:     "Chinese brackets conversion",
+			input:    "<个人信息【0】.姓名.张三>",
+			expected: "<个人信息[0].姓名.张三>",
+		},
+		{
+			name:     "Fullwidth numbers and symbols",
+			input:    "<账户信息［１］．银行．６２２２０２１００１１２３４５６７８９>",
+			expected: "<账户信息[1].银行.6222021001123456789>",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := normalizePlaceholder(tt.input)
+			if result != tt.expected {
+				t.Errorf("normalizePlaceholder(%q) = %q, expected %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestRestoreText_FormatCompatibility tests RestoreText with format variations.
+func TestRestoreText_FormatCompatibility(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
+
+	anon, err := NewHashHidePair(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	// Standard entities with normalized keys
+	entities := []*Entity{
+		{
+			Key:        "<个人信息[0].姓名.张三>",
+			EntityType: "个人信息",
+			ID:         "0",
+			Category:   "姓名",
+			Detail:     "张三",
+			Values:     []string{"张三"},
+		},
+		{
+			Key:        "<业务信息[2].系统.名称>",
+			EntityType: "业务信息",
+			ID:         "2",
+			Category:   "系统",
+			Detail:     "名称",
+			Values:     []string{"MySystem"},
+		},
+	}
+
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Standard format (backward compatibility)",
+			input:    "<个人信息[0].姓名.张三> works at company",
+			expected: "张三 works at company",
+		},
+		{
+			name:     "Extra spaces in placeholder",
+			input:    "< 个人信息 [0]. 姓名. 张三 > works at company",
+			expected: "张三 works at company",
+		},
+		{
+			name:     "Chinese punctuation in placeholder",
+			input:    "<业务信息[2]。系统。名称> is running",
+			expected: "MySystem is running",
+		},
+		{
+			name:     "Mixed format variations",
+			input:    "< 业务信息 [2]。 系统 。 名称 > uses < 个人信息 [0]. 姓名. 张三 >",
+			expected: "MySystem uses 张三",
+		},
+		{
+			name:     "Partial match - unknown placeholder preserved",
+			input:    "<个人信息[0].姓名.张三> and < unknown >",
+			expected: "张三 and < unknown >",
+		},
+		{
+			name:     "Multiple placeholders",
+			input:    "<个人信息[0].姓名.张三> manages <业务信息[2].系统.名称>",
+			expected: "张三 manages MySystem",
+		},
+		{
+			name:     "No placeholders",
+			input:    "plain text without placeholders",
+			expected: "plain text without placeholders",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := anon.RestoreText(ctx, entities, tt.input)
+			if err != nil {
+				t.Fatalf("RestoreText failed: %v", err)
+			}
+			if result != tt.expected {
+				t.Errorf("RestoreText(%q) = %q, expected %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestRestoreText_FullwidthNumbers tests restoration with fullwidth numbers.
+func TestRestoreText_FullwidthNumbers(t *testing.T) {
+	ctx := context.Background()
+	mockLLM := newMockWithResponse(newMockAnonymizeResponse("", map[string][]string{}))
+
+	anon, err := NewHashHidePair(mockLLM)
+	if err != nil {
+		t.Fatalf("Failed to create anonymizer: %v", err)
+	}
+
+	entities := []*Entity{
+		{
+			Key:        "<账户信息[0].银行账户.6222021001123456789>",
+			EntityType: "账户信息",
+			ID:         "0",
+			Category:   "银行账户",
+			Detail:     "6222021001123456789",
+			Values:     []string{"6222021001123456789"},
+		},
+	}
+
+	// Input with fullwidth numbers and spaces
+	input := "<　账户信息　[　０　].　银行账户　.　６２２２０２１００１１２３４５６７８９　>"
+	expected := "6222021001123456789"
+
+	result, err := anon.RestoreText(ctx, entities, input)
+	if err != nil {
+		t.Fatalf("RestoreText failed: %v", err)
+	}
+
+	if result != expected {
+		t.Errorf("RestoreText with fullwidth numbers failed: got %q, expected %q", result, expected)
+	}
+}

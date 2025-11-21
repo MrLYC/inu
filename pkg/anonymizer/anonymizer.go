@@ -24,6 +24,7 @@ import (
 	"io"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/rotisserie/eris"
 
@@ -31,6 +32,9 @@ import (
 	"github.com/cloudwego/eino/components/prompt"
 	"github.com/cloudwego/eino/schema"
 )
+
+// placeholderRegex matches placeholder patterns like <...>
+var placeholderRegex = regexp.MustCompile(`<[^>]+>`)
 
 // Anonymizer 定义文本敏感信息匿名化的核心接口。
 // 实现此接口的类型应当能够：
@@ -243,17 +247,87 @@ func (h *HasHidePair) AnonymizeText(ctx context.Context, types []string, text st
 }
 
 // RestoreText restores the original text from the anonymized text using the provided entities.
+// It supports fuzzy matching of placeholders with format variations (extra spaces, Chinese punctuation, fullwidth characters).
 func (h *HasHidePair) RestoreText(ctx context.Context, entities []*Entity, text string) (string, error) {
-	var replaceMapping []string
+	// Build normalized entity map: normalized_key -> original_value
+	entityMap := make(map[string]string)
 	for _, entity := range entities {
 		if len(entity.Values) == 0 {
 			continue
 		}
-		replaceMapping = append(replaceMapping, entity.Key, entity.Values[0])
+		normalizedKey := normalizePlaceholder(entity.Key)
+		entityMap[normalizedKey] = entity.Values[0]
 	}
 
-	replacer := strings.NewReplacer(replaceMapping...)
-	return replacer.Replace(text), nil
+	// Find all placeholders in text, normalize, and replace
+	result := placeholderRegex.ReplaceAllStringFunc(text, func(placeholder string) string {
+		normalizedKey := normalizePlaceholder(placeholder)
+		if value, exists := entityMap[normalizedKey]; exists {
+			return value
+		}
+		// Placeholder not found, return as-is (partial restoration)
+		return placeholder
+	})
+
+	return result, nil
+}
+
+// normalizePlaceholder normalizes a placeholder string to a standard format for matching.
+// It handles common format variations from external tools (ChatGPT, text editors):
+//   - Removes all whitespace (spaces, tabs, newlines)
+//   - Converts Chinese punctuation to English: 。→. ，→, 【→[ 】→]
+//   - Converts fullwidth characters to halfwidth (ASCII range)
+//
+// Normalization rules:
+//  1. Extract content between < and >
+//  2. Remove all whitespace characters
+//  3. Convert Chinese punctuation to English equivalents
+//  4. Convert fullwidth ASCII (U+FF01-U+FF5E) to halfwidth (U+0021-U+007E)
+//
+// Examples:
+//   - < 业务信息 [2]. 系统。名称 > → <业务信息[2].系统.名称>
+//   - <　个人信息　[　０　].　姓名　> → <个人信息[0].姓名>
+//   - <个人信息[0].姓名.张三> → <个人信息[0].姓名.张三> (unchanged)
+//
+// If the input is not a valid placeholder (missing < or >), it returns unchanged.
+func normalizePlaceholder(placeholder string) string {
+	// 1. Extract content between < and >
+	if !strings.HasPrefix(placeholder, "<") || !strings.HasSuffix(placeholder, ">") {
+		return placeholder // Not a placeholder, return as-is
+	}
+
+	content := placeholder[1 : len(placeholder)-1]
+
+	// 2. Remove all whitespace
+	content = strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1 // Remove
+		}
+		return r
+	}, content)
+
+	// 3. Convert Chinese punctuation to English
+	replacements := map[string]string{
+		"。": ".",
+		"，": ",",
+		"【": "[",
+		"】": "]",
+	}
+	for old, new := range replacements {
+		content = strings.ReplaceAll(content, old, new)
+	}
+
+	// 4. Convert fullwidth to halfwidth (ASCII range)
+	content = strings.Map(func(r rune) rune {
+		// Fullwidth ASCII: U+FF01 to U+FF5E
+		// Halfwidth ASCII: U+0021 to U+007E
+		if r >= 0xFF01 && r <= 0xFF5E {
+			return r - 0xFEE0 // Convert to halfwidth
+		}
+		return r
+	}, content)
+
+	return "<" + content + ">"
 }
 
 // NewHashHidePair 创建一个基于 <<<PAIR>>> 格式的 Anonymizer 实现。
