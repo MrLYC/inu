@@ -276,16 +276,65 @@ cat input.txt | inu anonymize 2> entities.log > anonymized.txt
 
 #### 启动 Web 服务器
 
+**需要认证的方式（推荐）：**
 ```bash
 inu web --admin-token your-secret-token
 ```
 
-使用自定义地址和端口：
+**不需要认证的方式（仅开发环境）：**
 ```bash
-inu web --addr 0.0.0.0:9090 --admin-user admin --admin-token your-secret-token
+inu web
 ```
 
-服务器启动后，可以通过 HTTP API 进行匿名化和还原操作。
+⚠️ **警告**：不使用 `--admin-token` 参数时，服务器将运行在无认证模式下，任何人都可以访问和使用 API。这仅适用于本地开发环境，生产环境中务必启用认证！
+
+使用自定义地址、端口和实体类型：
+```bash
+inu web --addr 0.0.0.0:9090 \
+  --admin-user admin \
+  --admin-token your-secret-token \
+  --entity-types "PERSON,ORG,EMAIL,PHONE,ADDRESS"
+```
+
+服务器启动后，可以通过 Web 界面或 HTTP API 进行匿名化和还原操作。
+
+#### Web 界面
+
+打开浏览器访问 `http://localhost:8080/`。
+
+**认证说明：**
+- 如果启动服务器时设置了 `--admin-token`，访问时需要输入用户名和密码
+- 如果未设置 `--admin-token`，无需认证即可直接访问
+
+**功能特性：**
+- 🎨 **双视图模式**：匿名化视图和还原视图
+- 🔄 **实时处理**：即时匿名化和还原文本
+- 💾 **会话状态**：自动保存实体映射到浏览器会话
+- 📱 **响应式设计**：支持桌面端和移动端
+- 🎯 **自定义实体类型**：支持添加自定义实体类型
+- 🔒 **安全认证**：可选的 Basic Auth 认证保护
+
+**使用流程：**
+
+1. **匿名化文本**
+   - 选择要识别的实体类型（支持多选）
+   - 在左侧输入框输入原始文本
+   - 点击"匿名化"按钮
+   - 在右侧查看匿名化结果
+   - 实体映射自动保存到浏览器会话
+
+2. **还原文本**
+   - 点击"切换到还原模式"
+   - 查看顶部的实体映射
+   - 在右侧输入框粘贴需要还原的文本
+   - 点击"还原"按钮
+   - 查看还原后的结果
+   - 可以多次还原不同的文本（实体保留）
+
+3. **多次处理**
+   - 一次匿名化，可以多次还原不同文本
+   - 刷新页面后状态自动恢复（使用 sessionStorage）
+   - 关闭标签页后数据自动清除
 
 #### API 端点
 
@@ -299,6 +348,19 @@ curl http://localhost:8080/health
 {
   "status": "ok",
   "version": "v0.1.0"
+}
+```
+
+**获取配置（需要认证）**
+```bash
+curl http://localhost:8080/api/v1/config \
+  -u admin:your-secret-token
+```
+
+响应：
+```json
+{
+  "entity_types": ["PERSON", "ORG", "EMAIL", "PHONE", "ADDRESS"]
 }
 ```
 
@@ -377,7 +439,15 @@ curl -X POST http://localhost:8080/api/v1/restore \
 
 #### 身份认证
 
-所有 `/api/v1/*` 端点都需要 HTTP Basic Authentication。使用 `-u username:password` 或设置 `Authorization` 头：
+**Web 界面和 API 端点**的认证是可选的，取决于启动服务器时是否设置了 `--admin-token`。
+
+**启用认证：**
+```bash
+inu web --admin-token your-secret-token
+```
+
+- **Web 界面**：浏览器会弹出认证对话框，输入用户名和密码
+- **API 调用**：使用 `-u username:password` 或设置 `Authorization` 头
 
 ```bash
 # 方式 1：使用 -u 参数
@@ -388,7 +458,14 @@ curl -H "Authorization: Basic $(echo -n 'admin:your-secret-token' | base64)" \
   http://localhost:8080/api/v1/anonymize ...
 ```
 
-**注意**：生产环境中建议使用 HTTPS 保护认证信息。
+**禁用认证（不推荐）：**
+```bash
+inu web
+```
+
+所有端点无需认证即可访问。⚠️ 仅用于本地开发环境！
+
+**注意**：生产环境中建议同时使用 HTTPS 和认证保护。
 
 ### 编程接口
 
@@ -466,9 +543,10 @@ inu/
 ├── pkg/
 │   ├── anonymizer/        # 核心匿名化逻辑
 │   ├── cli/               # CLI 工具函数（输入输出、实体管理）
-│   └── web/               # Web API 服务器
-│       ├── handlers/      # HTTP handlers（anonymize, restore, health）
-│       └── middleware/    # 认证中间件
+│   └── web/               # Web API 服务器和 UI
+│       ├── handlers/      # HTTP handlers（anonymize, restore, health, config）
+│       ├── middleware/    # 认证中间件
+│       └── static/        # Web UI 静态文件（HTML, CSS, JS）
 ├── bin/                   # 编译产物（不提交）
 ├── openspec/              # OpenSpec 规范和变更提案
 └── .github/               # GitHub Actions workflows
@@ -508,7 +586,7 @@ make lint
 - [x] CI/CD 自动化构建和发布
 - [x] Web API 服务（`inu web`）
 - [x] HTTP 身份认证
-- [ ] Web 界面
+- [x] Web 界面（交互式匿名化和还原）
 - [ ] 支持更多 LLM 提供商
 - [ ] 批量文件处理
 - [ ] 更丰富的配置文件支持

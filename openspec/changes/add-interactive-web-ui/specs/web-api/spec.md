@@ -3,55 +3,79 @@
 ## ADDED Requirements
 
 ### Requirement: 交互式 Web 界面
-Web 服务器 SHALL 提供单页应用 (SPA) 界面,允许用户通过浏览器进行匿名化和还原操作。
+Web 服务器 SHALL 提供单页应用 (SPA) 界面,允许用户通过浏览器进行匿名化和还原操作。UI 路由需要 Basic Auth 认证（与 API 使用相同的认证机制）。
 
-#### Scenario: 加载主页面
+#### 场景: 加载主页面
 ```
 请求: GET /
+请求头: Authorization: Basic YWRtaW46c2VjcmV0
 响应: 200 OK
 Content-Type: text/html
 返回 index.html 文件
 ```
 
+#### 场景: 加载主页面未授权
+```
+请求: GET /
+请求头: 无 Authorization 或凭据错误
+响应: 401 Unauthorized
+WWW-Authenticate: Basic realm="Inu Web UI"
+```
+
 #### 场景: 加载静态资源
 ```
 请求: GET /static/app.js
+请求头: Authorization: Basic YWRtaW46c2VjcmV0
 响应: 200 OK
 Content-Type: application/javascript
 返回 JavaScript 文件
 
 请求: GET /static/styles.css
+请求头: Authorization: Basic YWRtaW46c2VjcmV0
 响应: 200 OK
 Content-Type: text/css
 返回 CSS 文件
 ```
 
-#### Scenario: 加载静态资源
-```
-请求: GET /static/app.js
-响应: 200 OK
-Content-Type: application/javascript
-返回 JavaScript 文件
-
-请求: GET /static/styles.css
-响应: 200 OK
-Content-Type: text/css
-返回 CSS 文件
-```
-
-#### Scenario: 静态文件不存在
+#### 场景: 静态文件不存在
 ```
 请求: GET /static/nonexistent.js
+请求头: Authorization: Basic YWRtaW46c2VjcmV0
 响应: 404 Not Found
+```
+
+### Requirement: 配置端点
+Web 服务器 SHALL 提供配置端点,返回服务器启动时的实体类型配置。
+
+#### 场景: 获取实体类型配置
+```
+请求: GET /api/v1/config
+请求头: Authorization: Basic YWRtaW46c2VjcmV0
+响应: 200 OK
+Content-Type: application/json
+
+{
+  "entity_types": ["PERSON", "ORG", "EMAIL", "PHONE", "ADDRESS"]
+}
+
+说明: entity_types 从 --entity-types CLI 参数获取
+```
+
+#### 场景: 获取配置未授权
+```
+请求: GET /api/v1/config
+请求头: 无 Authorization 或凭据错误
+响应: 401 Unauthorized
 ```
 
 ### Requirement: 匿名化视图
 UI SHALL 提供匿名化视图,包含实体类型选择器、输入文本区域、输出显示区域和操作按钮。
 
-#### Scenario: 选择预定义实体类型
+#### 场景: 选择预定义实体类型
 ```
 UI状态:
-- 实体类型下拉菜单显示 --entity-types 参数指定的类型
+- 页面加载时调用 GET /api/v1/config 获取实体类型
+- 实体类型下拉菜单显示从配置端点获取的类型
 - 默认选中第一个类型
 
 用户操作:
@@ -111,9 +135,14 @@ UI状态:
 - UI 显示登录弹窗,提示输入用户名和密码
 - 用户输入凭据后重试请求
 - 凭据存储在内存中 (不存入 localStorage)
+
+说明: 
+- 由于 UI 路由也需要认证,用户在访问 GET / 时就会被要求登录
+- 浏览器会记住凭据并自动在后续 API 请求中使用
+- 此场景处理会话过期或凭据变更的情况
 ```
 
-#### Scenario: 匿名化失败 - 400 错误请求
+#### 场景: 匿名化失败 - 400 错误请求
 ```
 UI状态:
 - 用户输入空文本后点击 "匿名化"
@@ -123,11 +152,11 @@ UI状态:
 - {"error": "Text cannot be empty"}
 
 预期:
-- 右侧输出区域显示错误信息: "错误: Text cannot be empty"
+- 右侧输出区域显示详细错误信息: "错误: Text cannot be empty"
 - "匿名化" 按钮恢复可点击状态
 ```
 
-#### Scenario: 匿名化失败 - 500 服务器错误
+#### 场景: 匿名化失败 - 500 服务器错误
 ```
 UI状态:
 - 用户输入文本后点击 "匿名化"
@@ -137,15 +166,17 @@ UI状态:
 - {"error": "LLM service unavailable"}
 
 预期:
-- 右侧输出区域显示错误信息: "服务器错误: LLM service unavailable"
+- 右侧输出区域显示详细错误信息: "服务器错误: LLM service unavailable"
 - "匿名化" 按钮恢复可点击状态
 - 建议用户检查服务器日志
+
+说明: 保留详细错误消息以便调试,因为工具主要用于内部/开发环境
 ```
 
 ### Requirement: 还原视图
 UI SHALL 提供还原视图,显示实体映射,包含只读的匿名化文本、可编辑的输入区域和还原按钮。
 
-#### Scenario: 切换到还原模式
+#### 场景: 切换到还原模式
 ```
 UI状态:
 - 用户在匿名化视图完成匿名化
@@ -204,13 +235,13 @@ UI状态:
 
 预期:
 - UI 切换回匿名化视图
-- 左侧输入框保留之前的原始文本 (可选)
+- 左侧输入框保留之前的原始文本 (提供更好的用户体验)
 - 右侧输出区域保留匿名化结果
 - 实体映射仍在 sessionStorage 中 (未清除)
 - "切换到还原模式" 按钮仍可见
 ```
 
-#### Scenario: 还原失败 - 400 错误请求
+#### 场景: 还原失败 - 400 错误请求
 ```
 UI状态:
 - 用户在还原视图输入空文本后点击 "还原"
@@ -225,9 +256,9 @@ UI状态:
 ```
 
 ### Requirement: 前端状态管理
-前端 SHALL 使用 sessionStorage 存储实体映射和匿名化文本,实现视图间状态共享。
+前端 SHALL 使用 sessionStorage 存储实体映射、匿名化文本和原始文本,实现视图间状态共享。
 
-#### Scenario: 存储匿名化结果
+#### 场景: 存储匿名化结果
 ```
 时机: POST /api/v1/anonymize 成功返回
 
@@ -239,6 +270,7 @@ UI状态:
     "[EMAIL_1]": "zhangsan@example.com"
   },
   "anonymizedText": "[PERSON_1]在[ORG_1]工作,邮箱是[EMAIL_1]",
+  "originalText": "张三在阿里巴巴工作,邮箱是zhangsan@example.com",
   "entityTypes": ["PERSON", "ORG", "EMAIL"]
 }
 
@@ -250,7 +282,7 @@ UI状态:
 - 关闭标签页后数据自动清除
 ```
 
-#### Scenario: 恢复状态
+#### 场景: 恢复状态
 ```
 时机: 页面刷新或用户返回
 
@@ -260,6 +292,7 @@ UI状态:
 预期:
 - JavaScript 从 sessionStorage.getItem("inuState") 读取数据
 - 如果数据存在:
+  - 左侧输入框显示原始文本
   - 右侧显示匿名化结果
   - "切换到还原模式" 按钮可见
   - 实体类型选择器恢复之前选择
@@ -267,7 +300,7 @@ UI状态:
   - UI 恢复初始状态 (空输入框, 等待匿名化)
 ```
 
-#### Scenario: 清除状态
+#### 场景: 清除状态
 ```
 时机: 用户开始新的匿名化操作
 
@@ -283,7 +316,7 @@ UI状态:
 ### Requirement: 响应式设计
 UI SHALL 适配不同屏幕尺寸,提供桌面和移动端优化布局。
 
-#### Scenario: 桌面端布局 (>768px)
+#### 场景: 桌面端布局 (>768px)
 ```
 设备: 1920x1080 桌面浏览器
 
@@ -294,7 +327,7 @@ UI SHALL 适配不同屏幕尺寸,提供桌面和移动端优化布局。
 - 实体映射显示: 横向滚动条 (超出时)
 ```
 
-#### Scenario: 移动端布局 (<768px)
+#### 场景: 移动端布局 (<768px)
 ```
 设备: 375x667 iPhone SE
 
@@ -307,9 +340,9 @@ UI SHALL 适配不同屏幕尺寸,提供桌面和移动端优化布局。
 ```
 
 ### Requirement: 错误处理和用户反馈
-UI SHALL 提供清晰的错误提示和加载状态,改善用户体验。
+UI SHALL 提供清晰的详细错误提示和加载状态,改善用户体验。保留详细错误消息以便内部调试。
 
-#### Scenario: 网络连接失败
+#### 场景: 网络连接失败
 ```
 UI状态: 用户点击 "匿名化" 按钮
 
@@ -317,11 +350,11 @@ UI状态: 用户点击 "匿名化" 按钮
 
 预期:
 - JavaScript fetch() 抛出 TypeError 或 Network Error
-- 右侧输出区域显示: "无法连接到服务器,请检查网络或服务器状态"
+- 右侧输出区域显示详细错误: "无法连接到服务器,请检查网络或服务器状态"
 - "匿名化" 按钮恢复可点击状态
 ```
 
-#### Scenario: 加载动画
+#### 场景: 加载动画
 ```
 时机: 调用 API 期间 (anonymize 或 restore)
 
@@ -332,7 +365,7 @@ UI状态: 用户点击 "匿名化" 按钮
 - API 返回后恢复正常状态
 ```
 
-#### Scenario: 空输入提示
+#### 场景: 空输入提示
 ```
 UI状态: 用户未输入任何文本
 

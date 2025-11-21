@@ -19,11 +19,15 @@ func (c *Config) Validate() error {
 	if c.Addr == "" {
 		return fmt.Errorf("addr cannot be empty")
 	}
-	if c.AdminUser == "" {
-		return fmt.Errorf("admin-user cannot be empty")
-	}
-	if c.AdminToken == "" {
-		return fmt.Errorf("admin-token cannot be empty")
+	// If AdminToken is empty, no authentication is required
+	// If AdminToken is set, AdminUser must also be set
+	if c.AdminToken != "" && c.AdminUser == "" {
+		return fmt.Errorf("admin-user cannot be empty when admin-token is set")
 	}
 	return nil
+}
+
+// IsAuthEnabled returns true if authentication is enabled
+func (c *Config) IsAuthEnabled() bool {
+	return c.AdminToken != ""
 }

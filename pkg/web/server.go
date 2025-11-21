@@ -17,10 +17,11 @@ const version = "v0.1.0"
 
 // Server represents the HTTP API server
 type Server struct {
-	config     *Config
-	anonymizer anonymizer.Anonymizer
-	engine     *gin.Engine
-	httpServer *http.Server
+	config      *Config
+	anonymizer  anonymizer.Anonymizer
+	engine      *gin.Engine
+	httpServer  *http.Server
+	entityTypes []string
 }
 
 // NewServer creates a new web server instance
@@ -37,9 +38,10 @@ func NewServer(anon anonymizer.Anonymizer, config *Config) (*Server, error) {
 	engine.Use(gin.Logger())
 
 	s := &Server{
-		config:     config,
-		anonymizer: anon,
-		engine:     engine,
+		config:      config,
+		anonymizer:  anon,
+		engine:      engine,
+		entityTypes: anonymizer.DefaultEntityTypes, // 使用默认实体类型
 	}
 
 	s.setupRoutes()
@@ -47,15 +49,40 @@ func NewServer(anon anonymizer.Anonymizer, config *Config) (*Server, error) {
 	return s, nil
 }
 
+// SetEntityTypes sets the entity types for the server
+func (s *Server) SetEntityTypes(types []string) {
+	if len(types) > 0 {
+		s.entityTypes = types
+	}
+}
+
 // setupRoutes configures all HTTP routes and middleware
 func (s *Server) setupRoutes() {
+	// Determine if auth is enabled
+	authEnabled := s.config.IsAuthEnabled()
+
+	// UI routes (auth required if enabled)
+	ui := s.engine.Group("/")
+	if authEnabled {
+		ui.Use(middleware.BasicAuth(s.config.AdminUser, s.config.AdminToken))
+	}
+	{
+		ui.GET("/", func(c *gin.Context) {
+			c.File("pkg/web/static/index.html")
+		})
+		ui.Static("/static", "pkg/web/static")
+	}
+
 	// Health check endpoint (no auth required)
 	s.engine.GET("/health", handlers.HealthHandler(version))
 
-	// API v1 endpoints (auth required)
+	// API v1 endpoints (auth required if enabled)
 	v1 := s.engine.Group("/api/v1")
-	v1.Use(middleware.BasicAuth(s.config.AdminUser, s.config.AdminToken))
+	if authEnabled {
+		v1.Use(middleware.BasicAuth(s.config.AdminUser, s.config.AdminToken))
+	}
 	{
+		v1.GET("/config", handlers.ConfigHandler(s.entityTypes))
 		v1.POST("/anonymize", handlers.AnonymizeHandler(s.anonymizer))
 		v1.POST("/restore", handlers.RestoreHandler(s.anonymizer))
 	}
@@ -71,9 +98,19 @@ func (s *Server) Start() error {
 	log.Printf("Starting Inu Web API Server")
 	log.Printf("  Version: %s", version)
 	log.Printf("  Listening on: %s", s.config.Addr)
-	log.Printf("  Admin user: %s", s.config.AdminUser)
+
+	if s.config.IsAuthEnabled() {
+		log.Printf("  Authentication: ENABLED")
+		log.Printf("  Admin user: %s", s.config.AdminUser)
+	} else {
+		log.Printf("  Authentication: DISABLED")
+		log.Printf("  ⚠️  WARNING: Running without authentication!")
+	}
+
 	log.Printf("  Available endpoints:")
-	log.Printf("    GET  /health")
+	log.Printf("    GET  /              (Web UI)")
+	log.Printf("    GET  /health        (No auth)")
+	log.Printf("    GET  /api/v1/config")
 	log.Printf("    POST /api/v1/anonymize")
 	log.Printf("    POST /api/v1/restore")
 

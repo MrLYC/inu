@@ -29,9 +29,10 @@ import (
 )
 
 var (
-	webAddr       string
-	webAdminUser  string
-	webAdminToken string
+	webAddr        string
+	webAdminUser   string
+	webAdminToken  string
+	webEntityTypes []string
 )
 
 // NewWebCmd creates the web command.
@@ -41,10 +42,13 @@ func NewWebCmd() *cobra.Command {
 		Short: "Start HTTP API server",
 		Long: `Start a web server that provides RESTful API endpoints for text anonymization and restoration.
 
-The server requires authentication using HTTP Basic Auth. You must specify an admin token.
+Authentication can be enabled by providing an admin token. If no token is provided, 
+the server will run without authentication (not recommended for production).
 
 Available endpoints:
-  - GET  /health            Health check (no auth required)
+  - GET  /              Web UI
+  - GET  /health        Health check (no auth required)
+  - GET  /api/v1/config Configuration
   - POST /api/v1/anonymize  Anonymize text
   - POST /api/v1/restore    Restore anonymized text`,
 		RunE: runWeb,
@@ -52,9 +56,8 @@ Available endpoints:
 
 	cmd.Flags().StringVar(&webAddr, "addr", "127.0.0.1:8080", "Server address to listen on")
 	cmd.Flags().StringVar(&webAdminUser, "admin-user", "admin", "Admin username for HTTP Basic Auth")
-	cmd.Flags().StringVar(&webAdminToken, "admin-token", "", "Admin token/password for HTTP Basic Auth (required)")
-
-	cmd.MarkFlagRequired("admin-token")
+	cmd.Flags().StringVar(&webAdminToken, "admin-token", "", "Admin token/password for HTTP Basic Auth (leave empty to disable auth)")
+	cmd.Flags().StringSliceVar(&webEntityTypes, "entity-types", anonymizer.DefaultEntityTypes, "Entity types to recognize")
 
 	return cmd
 }
@@ -90,6 +93,9 @@ func runWeb(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	// Set entity types from command line flag
+	server.SetEntityTypes(webEntityTypes)
 
 	// Setup graceful shutdown
 	sigChan := make(chan os.Signal, 1)

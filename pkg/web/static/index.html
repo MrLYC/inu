@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inu - 文本匿名化工具</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Inu 文本匿名化</h1>
+            <p class="subtitle">智能实体识别与隐私保护</p>
+        </header>
+
+        <!-- 匿名化视图 -->
+        <div id="anonymize-view" class="view">
+            <div class="entity-selector">
+                <label for="entity-types">实体类型:</label>
+                <select id="entity-types" multiple>
+                    <!-- 从配置 API 动态加载 -->
+                </select>
+                <button id="add-custom-type" class="btn-secondary">+ 添加自定义类型</button>
+            </div>
+
+            <div class="panels">
+                <div class="panel">
+                    <h3>输入文本</h3>
+                    <textarea id="input-text" placeholder="在此输入需要匿名化的文本..."></textarea>
+                </div>
+                <div class="panel">
+                    <h3>匿名化输出</h3>
+                    <div id="output-text" class="output"></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="anonymize-btn" class="btn-primary">匿名化</button>
+                <button id="switch-to-restore-btn" class="btn-secondary" style="display: none;">切换到还原模式</button>
+            </div>
+        </div>
+
+        <!-- 还原视图 -->
+        <div id="restore-view" class="view" style="display: none;">
+            <div class="entity-mappings">
+                <h3>实体映射</h3>
+                <div id="entity-mappings-display" class="mappings-container"></div>
+            </div>
+
+            <div class="panels">
+                <div class="panel">
+                    <h3>匿名化文本</h3>
+                    <div id="anonymized-text-display" class="output"></div>
+                </div>
+                <div class="panel">
+                    <h3>还原输入</h3>
+                    <textarea id="restore-input" placeholder="粘贴需要还原的文本..."></textarea>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="restore-btn" class="btn-primary">还原</button>
+                <button id="back-to-anonymize-btn" class="btn-secondary">返回匿名化</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Inu Web API v0.1.0 | <a href="/health">健康检查</a></p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
