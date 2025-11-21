@@ -25,6 +25,11 @@
                 <button id="add-custom-type" class="btn-secondary">+ 添加自定义类型</button>
             </div>
 
+            <div class="actions">
+                <button id="anonymize-btn" class="btn-primary">脱敏</button>
+                <button id="switch-to-restore-btn" class="btn-secondary" style="display: none;">还原模式</button>
+            </div>
+
             <div class="panels">
                 <div class="panel">
                     <h3>输入文本</h3>
@@ -35,11 +40,6 @@
                     <div id="output-text" class="output"></div>
                 </div>
             </div>
-
-            <div class="actions">
-                <button id="anonymize-btn" class="btn-primary">脱敏</button>
-                <button id="switch-to-restore-btn" class="btn-secondary" style="display: none;">还原模式</button>
-            </div>
         </div>
 
         <!-- 还原视图 -->
@@ -47,6 +47,11 @@
             <div class="entity-mappings">
                 <h3>实体映射</h3>
                 <div id="entity-mappings-display" class="mappings-container"></div>
+            </div>
+
+            <div class="actions">
+                <button id="restore-btn" class="btn-primary">还原</button>
+                <button id="back-to-anonymize-btn" class="btn-secondary">脱敏模式</button>
             </div>
 
             <div class="panels">
@@ -58,11 +63,6 @@
                     <h3>还原输入</h3>
                     <textarea id="restore-input" placeholder="粘贴需要还原的文本..."></textarea>
                 </div>
-            </div>
-
-            <div class="actions">
-                <button id="restore-btn" class="btn-primary">还原</button>
-                <button id="back-to-anonymize-btn" class="btn-secondary">脱敏模式</button>
             </div>
         </div>
 
