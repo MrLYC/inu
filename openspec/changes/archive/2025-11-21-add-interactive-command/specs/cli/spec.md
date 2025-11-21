@@ -82,8 +82,8 @@
 - **AND** 提示信息应该写入 prompts.log
 - **AND** 命令仍然等待 stdin 输入（终端交互）
 
-### Requirement: 错误处理和用户体验
-系统 SHALL 提供清晰的错误信息和友好的交互提示。
+### Requirement: 交互式命令错误处理和用户体验
+系统 SHALL 在交互式命令中提供清晰的错误信息和友好的交互提示。
 
 #### Scenario: 环境变量未配置
 - **WHEN** 用户执行 `inu interactive -f input.txt` 但未设置 OPENAI_API_KEY
