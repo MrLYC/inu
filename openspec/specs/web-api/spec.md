@@ -42,6 +42,7 @@
   - API 版本
   - 管理员用户名（不显示 token）
   - 可用的 API 端点列表
+  - Web UI 已内置的说明（无需配置静态文件目录）
 
 #### Scenario: 环境变量未配置时报错
 - **WHEN** 用户执行 `inu web --admin-token secret123` 但未设置 OPENAI_API_KEY
