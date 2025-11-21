@@ -20,8 +20,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mrlyc/inu/pkg/anonymizer"
 	"github.com/rotisserie/eris"
+
+	"github.com/mrlyc/inu/pkg/anonymizer"
 )
 
 // WriteOutput writes content to stdout and/or file based on flags.

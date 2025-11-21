@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/mrlyc/inu/pkg/anonymizer"
 	"github.com/mrlyc/inu/pkg/web/handlers"
 	"github.com/mrlyc/inu/pkg/web/middleware"

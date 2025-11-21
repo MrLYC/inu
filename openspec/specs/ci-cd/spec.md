@@ -68,4 +68,3 @@ TBD - created by archiving change standardize-project-structure. Update Purpose 
 #### Scenario: 依赖缓存优化
 - **WHEN** 运行 CI/CD workflow
 - **THEN** 应该缓存 Go modules 以加速构建
-

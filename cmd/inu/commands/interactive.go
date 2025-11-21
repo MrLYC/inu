@@ -23,10 +23,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mrlyc/inu/pkg/anonymizer"
-	"github.com/mrlyc/inu/pkg/cli"
 	"github.com/rotisserie/eris"
 	"github.com/spf13/cobra"
+
+	"github.com/mrlyc/inu/pkg/anonymizer"
+	"github.com/mrlyc/inu/pkg/cli"
 )
 
 var (

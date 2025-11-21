@@ -72,7 +72,7 @@
 - [ ] 8.3 添加测试运行示例到文档
 
 ## 测试结果总结
-- **文件创建**: 
+- **文件创建**:
   - `pkg/anonymizer/mock_llm_test.go` (79 行)
   - `pkg/anonymizer/anonymizer_test.go` (477 行)
 - **测试数量**: 17 个测试用例全部通过

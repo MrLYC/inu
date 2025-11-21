@@ -24,19 +24,19 @@
   - [x] 调用 `AnonymizeText()` 脱敏
   - [x] 输出脱敏文本到 stdout
   - [x] 在内存中保存实体信息
-  
+
 - [x] 3.2 实现 `printPrompt()` 辅助函数
   - [x] 根据 `--no-prompt` 标志决定详细程度
   - [x] 详细模式：输出完整使用说明
   - [x] 简短模式：仅输出 "Waiting for input..."
   - [x] 提示中包含分隔符信息（如果使用）
-  
+
 - [x] 3.3 实现 `readUntilDelimiter()` 辅助函数
   - [x] 使用 `bufio.Scanner` 逐行读取 stdin
   - [x] 检测 EOF 或自定义分隔符
   - [x] 分隔符行本身不包含在返回内容中
   - [x] 返回读取的完整文本（去除分隔符行）
-  
+
 - [x] 3.4 实现循环还原逻辑
   - [x] 在循环中调用 `readUntilDelimiter()`
   - [x] 空输入时跳过（继续等待下一次）

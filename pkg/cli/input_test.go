@@ -28,13 +28,13 @@ func TestReadInput_FromFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	content := "test content from file"
 	if _, err := tmpFile.WriteString(content); err != nil {
 		t.Fatalf("Failed to write to temp file: %v", err)
 	}
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	// Test reading from file (highest priority)
 	result, err := ReadInput(tmpFile.Name(), "should be ignored", strings.NewReader("should also be ignored"))
@@ -104,10 +104,10 @@ func TestCheckRequiredEnvVars(t *testing.T) {
 	originalModelName := os.Getenv("OPENAI_MODEL_NAME")
 	defer func() {
 		if originalAPIKey != "" {
-			os.Setenv("OPENAI_API_KEY", originalAPIKey)
+			_ = os.Setenv("OPENAI_API_KEY", originalAPIKey)
 		}
 		if originalModelName != "" {
-			os.Setenv("OPENAI_MODEL_NAME", originalModelName)
+			_ = os.Setenv("OPENAI_MODEL_NAME", originalModelName)
 		}
 	}()
 
@@ -146,14 +146,14 @@ func TestCheckRequiredEnvVars(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.apiKey != "" {
-				os.Setenv("OPENAI_API_KEY", tt.apiKey)
+				_ = os.Setenv("OPENAI_API_KEY", tt.apiKey)
 			} else {
-				os.Unsetenv("OPENAI_API_KEY")
+				_ = os.Unsetenv("OPENAI_API_KEY")
 			}
 			if tt.modelName != "" {
-				os.Setenv("OPENAI_MODEL_NAME", tt.modelName)
+				_ = os.Setenv("OPENAI_MODEL_NAME", tt.modelName)
 			} else {
-				os.Unsetenv("OPENAI_MODEL_NAME")
+				_ = os.Unsetenv("OPENAI_MODEL_NAME")
 			}
 
 			err := CheckRequiredEnvVars()

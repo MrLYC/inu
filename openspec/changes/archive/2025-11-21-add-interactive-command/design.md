@@ -95,11 +95,11 @@ for {
     if processedText == "" {
         break  // EOF 且无内容，退出
     }
-    
+
     // 4. 还原并输出
     restoredText := anonymizer.RestoreText(entities, processedText)
     fmt.Fprintln(os.Stdout, restoredText)
-    
+
     // 5. 继续等待下一次输入
     fmt.Fprintln(os.Stderr, "\nReady for next input...")
 }
@@ -277,17 +277,17 @@ $ inu interactive -f report.txt --delimiter "==END=="
 ```go
 func readProcessedText() (string, error) {
     fmt.Fprintln(os.Stderr, "Enter processed text (press Ctrl+D when done):")
-    
+
     var lines []string
     scanner := bufio.NewScanner(os.Stdin)
     for scanner.Scan() {
         lines = append(lines, scanner.Text())
     }
-    
+
     if err := scanner.Err(); err != nil {
         return "", err
     }
-    
+
     return strings.Join(lines, "\n"), nil
 }
 ```
@@ -311,13 +311,13 @@ func parseEmbeddedEntities(input string) (text string, entities []*Entity, error
     if len(parts) != 2 {
         return input, nil, nil // 无嵌入实体
     }
-    
+
     text = strings.TrimSpace(parts[0])
-    
+
     // 解析实体 JSON
     endParts := strings.Split(parts[1], "<<<END_ENTITIES>>>")
     entitiesJSON := strings.TrimSpace(endParts[0])
-    
+
     var entities []*Entity
     err := json.Unmarshal([]byte(entitiesJSON), &entities)
     return text, entities, err
@@ -339,13 +339,13 @@ func parseEmbeddedEntities(input string) (text string, entities []*Entity, error
 func TestInteractiveCommand_Interactive(t *testing.T) {
     // 1. 创建管道模拟 stdin
     r, w := io.Pipe()
-    
+
     // 2. 启动 goroutine 写入处理后的文本
     go func() {
         w.Write([]byte("processed text\n"))
         w.Close()
     }()
-    
+
     // 3. 执行命令（使用 r 作为 stdin）
     // 4. 验证输出
 }
@@ -423,7 +423,7 @@ inu interactive --batch files/*.txt
 ```bash
 inu anonymize -f input.txt --wait
 ```
-**缺点**: 
+**缺点**:
 - 混淆 `anonymize` 命令的单一职责
 - 不够直观
 

@@ -19,9 +19,10 @@ package cli
 import (
 	"os"
 
-	"github.com/mrlyc/inu/pkg/anonymizer"
 	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
+
+	"github.com/mrlyc/inu/pkg/anonymizer"
 )
 
 // EntitiesConfig represents the YAML structure for entities file.

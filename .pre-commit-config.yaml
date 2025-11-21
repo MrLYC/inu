@@ -1,0 +1,44 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+      - id: end-of-file-fixer
+        name: Fix end of files
+      - id: check-yaml
+        name: Check YAML syntax
+        args: ["--unsafe"]
+      - id: check-added-large-files
+        name: Check for large files
+        args: ["--maxkb=1000"]
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+
+  # Go-specific hooks
+  - repo: local
+    hooks:
+      - id: gofmt
+        name: Run gofmt
+        entry: gofmt -w
+        language: system
+        files: \.go$
+        pass_filenames: true
+
+      - id: goimports
+        name: Run goimports
+        entry: bash -c 'export PATH="$HOME/.go/bin:$PATH" && goimports -w -local github.com/mrlyc/inu "$@"' --
+        language: system
+        files: \.go$
+        pass_filenames: true
+
+      - id: golangci-lint
+        name: Run golangci-lint
+        entry: bash -c 'export PATH="$HOME/.go/bin:$PATH" && golangci-lint run --timeout=5m --fix'
+        language: system
+        files: \.go$
+        pass_filenames: false

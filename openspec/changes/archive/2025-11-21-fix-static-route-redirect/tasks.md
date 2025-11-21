@@ -24,7 +24,7 @@
     - 测试 `/static/nonexistent.js` 返回 404
   - [x] 添加测试：`TestHomePageRoute`
     - 测试 `/` 返回 200 和 `index.html` 内容
-  
+
 - [x] 3.2 运行单元测试
   - [x] 执行 `go test ./pkg/web -v`
   - [x] 确保所有测试通过（11/11）

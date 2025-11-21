@@ -22,10 +22,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/spf13/cobra"
+
 	"github.com/mrlyc/inu/pkg/anonymizer"
 	"github.com/mrlyc/inu/pkg/cli"
 	"github.com/mrlyc/inu/pkg/web"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -42,7 +43,7 @@ func NewWebCmd() *cobra.Command {
 		Short: "Start HTTP API server",
 		Long: `Start a web server that provides RESTful API endpoints for text anonymization and restoration.
 
-Authentication can be enabled by providing an admin token. If no token is provided, 
+Authentication can be enabled by providing an admin token. If no token is provided,
 the server will run without authentication (not recommended for production).
 
 Available endpoints:

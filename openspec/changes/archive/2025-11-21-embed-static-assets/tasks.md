@@ -10,7 +10,7 @@
   - [x] 导入 `embed` 和 `io/fs` 包
   - [x] 添加 `//go:embed static/*` 指令
   - [x] 声明 `var staticFS embed.FS`
-  
+
 - [x] 2.2 修改 `setupRoutes()` 函数
   - [x] 创建静态文件子系统：`fs.Sub(staticFS, "static")`
   - [x] 创建 HTTP 文件系统：`http.FS(staticSubFS)`
@@ -23,12 +23,12 @@
   - [x] 测试读取 index.html
   - [x] 测试读取 app.js
   - [x] 测试读取 styles.css
-  
+
 - [x] 3.2 编译测试
   - [x] 运行 `make build` 验证编译成功
   - [x] 检查二进制文件大小增加（约 10-20KB）
   - [x] 运行 `make test` 确保所有测试通过
-  
+
 - [x] 3.3 集成测试
   - [x] 编译二进制文件
   - [x] 备份并删除 `pkg/web/static/` 目录
@@ -51,7 +51,7 @@
 - [x] 4.1 构建所有平台二进制
   - [x] 运行 `make build-all`
   - [x] 验证所有平台编译成功
-  
+
 - [x] 4.2 平台独立性测试
   - [x] 在 Linux 上测试二进制（如有环境）
   - [x] 在 macOS 上测试二进制
@@ -62,7 +62,7 @@
   - [x] 说明二进制文件已包含 Web UI
   - [x] 更新部署说明：单文件分发
   - [x] 移除关于静态文件的手动配置说明（如有）
-  
+
 - [x] 5.2 更新 `openspec/project.md`
   - [x] 在 "Architecture Patterns" 中添加静态资源嵌入说明
   - [x] 更新部署相关描述
@@ -78,7 +78,7 @@
   - [x] 检查错误处理是否完善
   - [x] 确保代码注释清晰
   - [x] 验证日志输出合理
-  
+
 - [x] 7.2 性能验证
   - [x] 对比嵌入前后的响应时间
   - [x] 验证内存使用无明显增加
@@ -90,7 +90,7 @@
   - [x] 在干净环境中运行
   - [x] 完整测试所有 Web UI 功能
   - [x] 验证用户体验符合预期
-  
+
 - [x] 8.2 回归测试
   - [x] 运行完整测试套件：`make test`
   - [x] 测试 CLI 命令不受影响
@@ -106,4 +106,3 @@
   - [x] 运行 `openspec validate embed-static-assets --strict`
   - [x] 修复所有验证错误
   - [x] 准备归档
-

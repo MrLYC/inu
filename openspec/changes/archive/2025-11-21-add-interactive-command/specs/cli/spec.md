@@ -51,7 +51,7 @@
   2. Process it externally (e.g., paste to ChatGPT)
   3. Paste the processed text back here
   4. Press Ctrl+D (or type 'END' if --delimiter is set) to restore
-  
+
   Waiting for your input...
   ```
 

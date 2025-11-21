@@ -18,12 +18,14 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/mrlyc/inu/pkg/anonymizer"
 	"github.com/mrlyc/inu/pkg/cli"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -100,7 +102,11 @@ func runAnonymize(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		defer fileWriter.Close()
+		defer func() {
+			if err := fileWriter.Close(); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to close file: %v\n", err)
+			}
+		}()
 		writer = io.MultiWriter(os.Stdout, fileWriter)
 	} else if !anonymizeNoPrint {
 		// Output to stdout only
@@ -111,7 +117,11 @@ func runAnonymize(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		defer fileWriter.Close()
+		defer func() {
+			if err := fileWriter.Close(); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to close file: %v\n", err)
+			}
+		}()
 		writer = fileWriter
 	} else {
 		// No output (no-print and no output file)

@@ -72,6 +72,6 @@ inu interactive -c "文本" --no-prompt
   - 新增 `cmd/inu/commands/interactive.go` - Interactive 命令实现
   - 修改 `cmd/inu/main.go` - 注册 interactive 命令
 - **依赖变更**: 无（复用现有 anonymizer 和 CLI 工具）
-- **不破坏现有功能**: 
+- **不破坏现有功能**:
   - `anonymize` 和 `restore` 命令保持不变
   - 新增独立的 `interactive` 命令

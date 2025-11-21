@@ -21,7 +21,7 @@
   - 避免引入额外依赖（如 gomock、testify/mock）
   - 更容易控制和理解 mock 行为
   - 符合项目"最小依赖"原则
-  
+
 **替代方案（未采用）**：
 - gomock：需要代码生成，增加复杂度
 - testify/mock：额外依赖，对简单接口过度设计
@@ -125,13 +125,13 @@ func TestAnonymizeText_Success(t *testing.T) {
             },
         ),
     }
-    
+
     // 创建脱敏器
     anon, _ := New(mockLLM)
-    
+
     // 执行测试
     result, entities, err := anon.AnonymizeText(ctx, []string{"个人信息"}, "张三 lives in Beijing")
-    
+
     // 验证结果
     assert.NoError(t, err)
     assert.Equal(t, "<个人信息[0].姓名.全名> lives in Beijing", result)

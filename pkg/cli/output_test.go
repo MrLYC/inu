@@ -49,8 +49,8 @@ func TestWriteOutput_FileOnly(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	tmpFile.Close()
-	defer os.Remove(tmpFile.Name())
+	_ = tmpFile.Close()
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	// Test file output with noPrint=true (file only, no stdout)
 	err = WriteOutput(content, true, tmpFile.Name())
@@ -74,8 +74,8 @@ func TestWriteOutput_PrintAndFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	tmpFile.Close()
-	defer os.Remove(tmpFile.Name())
+	_ = tmpFile.Close()
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	// Test both print and file output (noPrint=false)
 	err = WriteOutput(content, false, tmpFile.Name())

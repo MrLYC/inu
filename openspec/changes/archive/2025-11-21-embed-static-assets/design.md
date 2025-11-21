@@ -91,7 +91,7 @@ ui.GET("/", func(c *gin.Context) {
 		return
 	}
 	defer data.Close()
-	
+
 	c.DataFromReader(http.StatusOK, -1, "text/html; charset=utf-8", data, nil)
 })
 ```
@@ -169,7 +169,7 @@ func TestStaticFilesEmbedded(t *testing.T) {
 	entries, err := staticFS.ReadDir("static")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, entries)
-	
+
 	// 验证关键文件存在
 	expectedFiles := []string{"index.html", "app.js", "styles.css"}
 	for _, filename := range expectedFiles {
@@ -236,7 +236,7 @@ mv pkg/web/static.bak pkg/web/static
 ### 平台兼容性
 
 - ✅ Linux (amd64, arm64)
-- ✅ macOS (amd64, arm64)  
+- ✅ macOS (amd64, arm64)
 - ✅ Windows (amd64)
 
 所有平台的编译和运行行为一致。

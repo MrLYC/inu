@@ -7,9 +7,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/mrlyc/inu/pkg/anonymizer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mrlyc/inu/pkg/anonymizer"
 )
 
 // mockAnonymizer is a simple mock for testing web routes

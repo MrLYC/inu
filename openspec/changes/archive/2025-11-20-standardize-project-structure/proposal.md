@@ -15,7 +15,7 @@
 
 ## Impact
 - 影响的 specs: 新增 `build-system` 和 `ci-cd` 两个 capability
-- 影响的代码: 
+- 影响的代码:
   - 项目根目录：新增 `Makefile`
   - `.github/workflows/`：新增 `ci.yml` 和 `release.yml`
   - 代码结构重组：`main.go` → `cmd/inu/main.go`，核心逻辑 → `pkg/anonymizer/`

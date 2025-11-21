@@ -59,7 +59,7 @@ func (group *RouterGroup) StaticFS(relativePath string, fs http.FileSystem) IRou
     }
     handler := group.createStaticHandler(relativePath, fs)
     urlPattern := path.Join(relativePath, "/*filepath")
-    
+
     // Register GET and HEAD handlers
     group.GET(urlPattern, handler)
     group.HEAD(urlPattern, handler)
@@ -84,9 +84,9 @@ func (s *Server) setupRoutes() {
         log.Fatalf("Failed to create static filesystem: %v", err)
     }
     httpFS := http.FS(staticSubFS)
-    
+
     authEnabled := s.config.IsAuthEnabled()
-    
+
     // UI routes
     ui := s.engine.Group("/")
     if authEnabled {
@@ -97,7 +97,7 @@ func (s *Server) setupRoutes() {
         ui.GET("/", func(c *gin.Context) {
             c.FileFromFS("index.html", httpFS)
         })
-        
+
         // 静态资源：使用 http.FileServer
         fileServer := http.FileServer(httpFS)
         ui.GET("/static/*filepath", func(c *gin.Context) {
@@ -109,7 +109,7 @@ func (s *Server) setupRoutes() {
             fileServer.ServeHTTP(c.Writer, c.Request)
         })
     }
-    
+
     // ... 其他路由
 }
 ```
@@ -181,7 +181,7 @@ s.engine.NoRoute(func(c *gin.Context) {
 ## 实现步骤
 
 1. **修改 `setupRoutes()` 方法**
-   - 替换 `ui.StaticFS("/static", httpFS)` 
+   - 替换 `ui.StaticFS("/static", httpFS)`
    - 使用 `http.FileServer` + 自定义路由处理器
 
 2. **添加 import**

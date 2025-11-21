@@ -1,6 +1,6 @@
 # 归档总结：fix-static-route-redirect
 
-**归档日期**: 2025-11-21  
+**归档日期**: 2025-11-21
 **状态**: ✅ 已完成并归档
 
 ## 变更概述
@@ -21,7 +21,7 @@
 - **pkg/web/server_test.go**: 新增单元测试
   - `TestStaticRoutes`: 验证静态文件路由（4 个测试用例）
     - GET /static/app.js → 200 + JavaScript 内容
-    - GET /static/styles.css → 200 + CSS 内容  
+    - GET /static/styles.css → 200 + CSS 内容
     - GET /static/index.html → 200 + HTML 内容
     - GET /static/nonexistent.js → 404
   - `TestHomePageRoute`: 验证首页路由
@@ -76,7 +76,7 @@ ui.GET("/static/*filepath", func(c *gin.Context) {
         c.String(http.StatusNotFound, "File not found")
         return
     }
-    
+
     // 根据扩展名设置 Content-Type
     contentType := "application/octet-stream"
     if strings.HasSuffix(filepath, ".html") {
@@ -86,7 +86,7 @@ ui.GET("/static/*filepath", func(c *gin.Context) {
     } else if strings.HasSuffix(filepath, ".js") {
         contentType = "application/javascript; charset=utf-8"
     }
-    
+
     c.Data(http.StatusOK, contentType, data)
 })
 ```
@@ -165,6 +165,6 @@ ui.GET("/static/*filepath", gin.WrapH(fileServer))
 
 ---
 
-**归档方式**: 手动归档（OpenSpec CLI 未安装）  
-**验证方式**: 运行单元测试 + 手动测试  
+**归档方式**: 手动归档（OpenSpec CLI 未安装）
+**验证方式**: 运行单元测试 + 手动测试
 **归档路径**: `openspec/changes/archive/2025-11-21-fix-static-route-redirect/`

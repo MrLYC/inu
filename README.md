@@ -56,7 +56,100 @@ make build
 
 编译后的二进制文件位于 `bin/inu`。
 
-## 🚀 快速开始
+## �️ 开发环境配置
+
+如果你想参与 Inu 的开发或贡献代码，需要配置本地开发环境。
+
+### 安装 Pre-commit
+
+Pre-commit 会在每次 git commit 前自动运行代码格式化和质量检查，确保代码符合项目标准。
+
+**安装 pre-commit**：
+```bash
+# 方式 1: 使用 pip
+pip3 install pre-commit
+
+# 方式 2: 使用 Homebrew (macOS)
+brew install pre-commit
+
+# 方式 3: 使用 mise (如果项目使用 mise)
+mise use -g pre-commit@latest
+```
+
+**安装 Git hooks**：
+```bash
+cd inu
+pre-commit install
+```
+
+### 安装代码质量工具
+
+**安装 goimports**（整理 Go 导入语句）：
+```bash
+go install golang.org/x/tools/cmd/goimports@latest
+```
+
+**安装 golangci-lint**（代码静态检查）：
+```bash
+# 方式 1: 使用 Homebrew (macOS)
+brew install golangci-lint
+
+# 方式 2: 使用 go install
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+# 方式 3: 使用 mise
+mise use -g golangci-lint@latest
+```
+
+### 使用 Pre-commit Hooks
+
+安装完成后，每次 `git commit` 时会自动运行以下检查：
+- 移除行尾空格
+- 确保文件以换行结束
+- 检查 YAML 语法
+- 运行 `gofmt` 格式化代码
+- 运行 `goimports` 整理导入
+- 运行 `golangci-lint` 进行代码质量检查
+
+**手动运行所有检查**：
+```bash
+pre-commit run --all-files
+```
+
+**跳过 hooks（紧急情况）**：
+```bash
+git commit --no-verify -m "urgent fix"
+```
+
+### 疑难解答
+
+如果遇到 `goimports` 或 `golangci-lint` 命令找不到的错误：
+
+1. **检查 GOPATH**：
+   ```bash
+   echo $GOPATH
+   # 应该输出类似 /Users/username/.go
+   ```
+
+2. **确认工具路径**：
+   ```bash
+   ls $HOME/.go/bin
+   # 应该看到 goimports 和 golangci-lint
+   ```
+
+3. **添加到 PATH**（如果需要）：
+   ```bash
+   export PATH="$HOME/.go/bin:$PATH"
+   # 或将上面的命令添加到 ~/.zshrc 或 ~/.bashrc
+   ```
+
+4. **验证安装**：
+   ```bash
+   goimports -version
+   golangci-lint --version
+   ```
+
+## �🚀 快速开始
 
 ### 配置环境变量
 
@@ -219,12 +312,12 @@ RESTORED TEXT:
    [粘贴到 ChatGPT 获取总结]
    ^D
    [得到还原的总结]
-   
+
    # 第二次：翻译总结
    [粘贴总结到 ChatGPT 获取翻译]
    ^D
    [得到还原的翻译]
-   
+
    # 按 Ctrl+C 退出
    ```
 
@@ -482,43 +575,43 @@ package main
 import (
     "context"
     "log"
-    
+
     "github.com/mrlyc/inu/pkg/anonymizer"
 )
 
 func main() {
     ctx := context.Background()
-    
+
     // 创建 LLM 客户端
     llm, err := anonymizer.CreateOpenAIChatModel(ctx)
     if err != nil {
         log.Fatal(err)
     }
-    
+
     // 创建脱敏器
     anon, err := anonymizer.NewHashHidePair(llm)
     if err != nil {
         log.Fatal(err)
     }
-    
+
     // 脱敏文本
     text := "张三的身份证号是 110101199001011234，他的电话号码是 13800138000。"
     types := []string{"个人信息", "业务信息", "资产信息", "账户信息", "位置数据", "文档名称", "组织机构", "岗位称谓"}
-    
+
     result, entities, err := anon.AnonymizeText(ctx, types, text)
     if err != nil {
         log.Fatal(err)
     }
-    
+
     log.Printf("脱敏结果: %s", result)
     // 输出: <个人信息[0].姓名.全名> 的身份证号是 <个人信息[1].身份证.110101199001011234>...
-    
+
     // 还原文本
     restored, err := anon.RestoreText(ctx, entities, result)
     if err != nil {
         log.Fatal(err)
     }
-    
+
     log.Printf("还原结果: %s", restored)
     // 输出: 张三的身份证号是 110101199001011234，他的电话号码是 13800138000。
 }
@@ -541,6 +634,123 @@ Inu 默认识别以下类型的敏感信息：
 
 ## 🛠️ 开发
 
+### 开发环境设置
+
+本项目使用 [pre-commit](https://pre-commit.com/) 来保证代码质量，在提交代码前自动运行格式化和 lint 检查。
+
+#### 安装 pre-commit
+
+**macOS / Linux (推荐使用 mise):**
+```bash
+mise install  # 如果项目配置了 mise.toml
+```
+
+**macOS (使用 Homebrew):**
+```bash
+brew install pre-commit
+```
+
+**通用方式 (使用 pip):**
+```bash
+pip install pre-commit
+# 或
+pip3 install pre-commit
+```
+
+#### 安装 Go 工具
+
+确保安装了以下 Go 代码质量工具：
+
+```bash
+# 安装 goimports（导入排序）
+go install golang.org/x/tools/cmd/goimports@latest
+
+# 安装 golangci-lint（代码检查）
+# macOS:
+brew install golangci-lint
+
+# Linux / Windows:
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+```
+
+#### 初始化 pre-commit hooks
+
+在项目根目录执行：
+
+```bash
+pre-commit install
+```
+
+这会在本地 `.git/hooks/` 目录中安装 Git hooks。之后每次 `git commit` 时，hooks 会自动运行。
+
+#### 使用方法
+
+**正常提交（自动运行 hooks）：**
+```bash
+git add .
+git commit -m "your commit message"
+# pre-commit 会自动运行，如果有问题会阻止提交
+```
+
+**手动运行所有 hooks：**
+```bash
+pre-commit run --all-files
+```
+
+**跳过 hooks（不推荐）：**
+```bash
+git commit --no-verify -m "your message"
+```
+
+**只运行特定 hook：**
+```bash
+pre-commit run gofmt --all-files
+pre-commit run golangci-lint --all-files
+```
+
+#### Hooks 说明
+
+pre-commit 会运行以下检查：
+
+- **文件检查**
+  - 去除行尾空白字符
+  - 确保文件以换行符结尾
+  - 检查 YAML 语法
+  - 检查大文件（超过 1MB）
+  - 检查是否有未解决的合并冲突
+
+- **Go 代码检查**
+  - `gofmt`: 自动格式化 Go 代码
+  - `goimports`: 整理和优化导入语句
+  - `golangci-lint`: 运行 lint 检查（支持自动修复）
+
+如果 hook 自动修复了代码，你需要重新 `git add` 并再次提交。
+
+#### 故障排除
+
+**Hook 运行失败：**
+```bash
+# 查看详细错误信息
+pre-commit run --all-files --verbose
+
+# 清除缓存并重试
+pre-commit clean
+pre-commit run --all-files
+```
+
+**跳过特定文件：**
+
+编辑 `.pre-commit-config.yaml`，在对应 hook 中添加 `exclude` 参数：
+```yaml
+- id: gofmt
+  exclude: ^vendor/|^.openspec/
+```
+
+**更新 hooks 版本：**
+```bash
+pre-commit autoupdate
+```
+
 ### 项目结构
 
 ```
@@ -556,7 +766,8 @@ inu/
 │       └── static/        # Web UI 静态文件（HTML, CSS, JS）
 ├── bin/                   # 编译产物（不提交）
 ├── openspec/              # OpenSpec 规范和变更提案
-└── .github/               # GitHub Actions workflows
+├── .github/               # GitHub Actions workflows
+└── .pre-commit-config.yaml  # Pre-commit hooks 配置
 ```
 
 ### 构建命令
@@ -578,9 +789,15 @@ go test ./...
 
 ### 代码检查
 
-需要安装 [golangci-lint](https://golangci-lint.run/usage/install/)：
-
+**使用 pre-commit（推荐）：**
 ```bash
+pre-commit run --all-files
+```
+
+**直接使用 golangci-lint：**
+```bash
+golangci-lint run --timeout=5m
+# 或使用 Makefile
 make lint
 ```
 

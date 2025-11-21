@@ -36,6 +36,6 @@ inu web [--addr 127.0.0.1:8080] [--admin-user admin] [--admin-token <token>]
     - `pkg/web/handlers/restore.go` - 还原 API handler
     - `pkg/web/middleware/auth.go` - 身份认证中间件
   - 修改 `cmd/inu/main.go` - 注册 web 命令
-- **依赖变更**: 
+- **依赖变更**:
   - 新增 `github.com/gin-gonic/gin` (Web 框架)
 - **不破坏现有功能**: CLI 命令保持完全兼容

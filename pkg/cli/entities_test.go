@@ -49,8 +49,8 @@ func TestSaveAndLoadEntities(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	tmpFile.Close()
-	defer os.Remove(tmpFile.Name())
+	_ = tmpFile.Close()
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	// Test saving entities
 	err = SaveEntitiesToYAML(testEntities, tmpFile.Name())
@@ -119,8 +119,8 @@ func TestSaveEntitiesToYAML_EmptyEntities(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	tmpFile.Close()
-	defer os.Remove(tmpFile.Name())
+	_ = tmpFile.Close()
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	// Test saving empty entities list
 	err = SaveEntitiesToYAML([]*anonymizer.Entity{}, tmpFile.Name())

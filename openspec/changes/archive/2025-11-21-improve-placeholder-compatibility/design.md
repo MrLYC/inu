@@ -108,9 +108,9 @@ func normalizePlaceholder(placeholder string) string {
     if !strings.HasPrefix(placeholder, "<") || !strings.HasSuffix(placeholder, ">") {
         return placeholder // Not a placeholder, return as-is
     }
-    
+
     content := placeholder[1:len(placeholder)-1]
-    
+
     // 2. Remove all whitespace
     content = strings.Map(func(r rune) rune {
         if unicode.IsSpace(r) {
@@ -118,7 +118,7 @@ func normalizePlaceholder(placeholder string) string {
         }
         return r
     }, content)
-    
+
     // 3. Convert Chinese punctuation to English
     replacements := map[string]string{
         "。": ".",
@@ -129,7 +129,7 @@ func normalizePlaceholder(placeholder string) string {
     for old, new := range replacements {
         content = strings.ReplaceAll(content, old, new)
     }
-    
+
     // 4. Convert fullwidth to halfwidth (ASCII range)
     content = strings.Map(func(r rune) rune {
         // Fullwidth ASCII: U+FF00 to U+FF5E
@@ -139,7 +139,7 @@ func normalizePlaceholder(placeholder string) string {
         }
         return r
     }, content)
-    
+
     return "<" + content + ">"
 }
 ```
@@ -157,7 +157,7 @@ func (h *HasHidePair) RestoreText(ctx context.Context, entities []*Entity, text 
         normalizedKey := normalizePlaceholder(entity.Key)
         entityMap[normalizedKey] = entity.Values[0]
     }
-    
+
     // Find all placeholders in text, normalize, and replace
     placeholderRegex := regexp.MustCompile(`<[^>]+>`)
     result := placeholderRegex.ReplaceAllStringFunc(text, func(placeholder string) string {
@@ -168,7 +168,7 @@ func (h *HasHidePair) RestoreText(ctx context.Context, entities []*Entity, text 
         // Placeholder not found, return as-is (partial restoration)
         return placeholder
     })
-    
+
     return result, nil
 }
 ```

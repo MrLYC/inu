@@ -1,6 +1,6 @@
 # 归档总结：embed-static-assets
 
-**归档日期**: 2025-11-21  
+**归档日期**: 2025-11-21
 **状态**: ✅ 已完成并归档
 
 ## 变更概述
@@ -98,6 +98,6 @@ ui.StaticFS("/static", httpFS)
 
 ---
 
-**归档工具**: 手动归档（openspec CLI 未安装）  
-**验证方式**: 运行完整测试套件 + 集成测试  
+**归档工具**: 手动归档（openspec CLI 未安装）
+**验证方式**: 运行完整测试套件 + 集成测试
 **归档路径**: `openspec/changes/archive/2025-11-21-embed-static-assets/`

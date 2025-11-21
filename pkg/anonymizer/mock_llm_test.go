@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 
 	"github.com/cloudwego/eino/components/model"
 	"github.com/cloudwego/eino/schema"
@@ -33,24 +32,6 @@ type mockChatModel struct {
 	responseError error           // The error to return (if any)
 	streamTokens  []string        // Tokens to stream (for Stream() method)
 	streamError   error           // Error to return during streaming
-}
-
-// mockStreamReaderWrapper wraps token slice to provide Recv() interface
-type mockStreamReaderWrapper struct {
-	tokens []string
-	index  int
-}
-
-func (m *mockStreamReaderWrapper) Recv() (*schema.Message, error) {
-	if m.index >= len(m.tokens) {
-		return nil, io.EOF
-	}
-	token := m.tokens[m.index]
-	m.index++
-	return &schema.Message{
-		Role:    schema.Assistant,
-		Content: token,
-	}, nil
 }
 
 // Generate implements model.BaseChatModel.Generate for testing.
@@ -122,19 +103,5 @@ func newMockErrorResponse(err error) *mockChatModel {
 func newMockWithResponse(response *schema.Message) *mockChatModel {
 	return &mockChatModel{
 		response: response,
-	}
-}
-
-// newMockWithStreamTokens creates a mock that streams tokens.
-func newMockWithStreamTokens(tokens []string) *mockChatModel {
-	return &mockChatModel{
-		streamTokens: tokens,
-	}
-}
-
-// newMockStreamError creates a mock that returns an error during streaming.
-func newMockStreamError(err error) *mockChatModel {
-	return &mockChatModel{
-		streamError: err,
 	}
 }

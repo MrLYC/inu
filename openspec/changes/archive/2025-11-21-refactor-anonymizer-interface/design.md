@@ -192,10 +192,10 @@ type Server struct {
 type Anonymizer interface {
     // AnonymizeText 批量脱敏文本，返回完整结果
     AnonymizeText(ctx context.Context, types []string, text string) (string, []*Entity, error)
-    
+
     // AnonymizeTextStream 流式脱敏文本，实时写入 writer
     AnonymizeTextStream(ctx context.Context, types []string, text string, writer io.Writer) ([]*Entity, error)
-    
+
     // RestoreText 使用实体映射还原脱敏文本
     RestoreText(ctx context.Context, entities []*Entity, text string) (string, error)
 }

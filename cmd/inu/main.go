@@ -20,8 +20,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mrlyc/inu/cmd/inu/commands"
 	"github.com/spf13/cobra"
+
+	"github.com/mrlyc/inu/cmd/inu/commands"
 )
 
 var (
