@@ -523,7 +523,7 @@ func TestNormalizePlaceholder(t *testing.T) {
 		},
 		{
 			name:     "Remove extra spaces",
-			input:    "< 个人信息 [0]. 姓名. 张三 >",
+			input:    "< 个人信息 [0]. 姓名. 全名 >",
 			expected: "<个人信息[0].姓名.全名>",
 		},
 		{
@@ -590,7 +590,7 @@ func TestRestoreText_FormatCompatibility(t *testing.T) {
 			EntityType: "个人信息",
 			ID:         "0",
 			Category:   "姓名",
-			Detail:     "张三",
+			Detail:     "全名",
 			Values:     []string{"张三"},
 		},
 		{
@@ -615,7 +615,7 @@ func TestRestoreText_FormatCompatibility(t *testing.T) {
 		},
 		{
 			name:     "Extra spaces in placeholder",
-			input:    "< 个人信息 [0]. 姓名. 张三 > works at company",
+			input:    "< 个人信息 [0]. 姓名. 全名 > works at company",
 			expected: "张三 works at company",
 		},
 		{
@@ -625,7 +625,7 @@ func TestRestoreText_FormatCompatibility(t *testing.T) {
 		},
 		{
 			name:     "Mixed format variations",
-			input:    "< 业务信息 [2]。 系统 。 名称 > uses < 个人信息 [0]. 姓名. 张三 >",
+			input:    "< 业务信息 [2]。 系统 。 名称 > uses < 个人信息 [0]. 姓名. 全名 >",
 			expected: "MySystem uses 张三",
 		},
 		{

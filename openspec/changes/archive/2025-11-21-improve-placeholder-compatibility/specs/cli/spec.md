@@ -39,7 +39,7 @@
 - **THEN** 系统应该退出并显示清晰的解析错误信息
 
 #### Scenario: 还原包含额外空格的占位符
-- **WHEN** 用户执行 `echo "< 个人信息 [0]. 姓名. 张三 >" | inu restore --entities entities.yaml`
+- **WHEN** 用户执行 `echo "< 个人信息 [0]. 姓名. 全名 >" | inu restore --entities entities.yaml`
 - **AND** 实体文件包含标准格式的键 `<个人信息[0].姓名.全名>`
 - **THEN** 系统应该成功匹配并还原为原始值 "张三"
 - **AND** 输出应该是 "张三"（不是占位符）
