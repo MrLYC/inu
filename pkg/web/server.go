@@ -4,9 +4,9 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"io/fs"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -42,6 +42,10 @@ func NewServer(anon anonymizer.Anonymizer, config *Config) (*Server, error) {
 	engine.Use(gin.Recovery())
 	engine.Use(gin.Logger())
 
+	// Disable automatic redirects that can cause 301 loops
+	engine.RedirectTrailingSlash = false
+	engine.RedirectFixedPath = false
+
 	s := &Server{
 		config:      config,
 		anonymizer:  anon,
@@ -63,13 +67,6 @@ func (s *Server) SetEntityTypes(types []string) {
 
 // setupRoutes configures all HTTP routes and middleware
 func (s *Server) setupRoutes() {
-	// Create embedded static file system
-	staticSubFS, err := fs.Sub(staticFS, "static")
-	if err != nil {
-		log.Fatalf("Failed to create static filesystem: %v", err)
-	}
-	httpFS := http.FS(staticSubFS)
-
 	// Determine if auth is enabled
 	authEnabled := s.config.IsAuthEnabled()
 
@@ -79,10 +76,43 @@ func (s *Server) setupRoutes() {
 		ui.Use(middleware.BasicAuth(s.config.AdminUser, s.config.AdminToken))
 	}
 	{
+		// Serve index.html at root
 		ui.GET("/", func(c *gin.Context) {
-			c.FileFromFS("index.html", httpFS)
+			data, err := staticFS.ReadFile("static/index.html")
+			if err != nil {
+				c.String(http.StatusNotFound, "File not found")
+				return
+			}
+			c.Data(http.StatusOK, "text/html; charset=utf-8", data)
 		})
-		ui.StaticFS("/static", httpFS)
+
+		// Serve static files using http.FileServer
+		// This avoids the 301 redirect loop issue with Gin's StaticFS
+		ui.GET("/static/*filepath", func(c *gin.Context) {
+			// Get the file path after /static/
+			filepath := c.Param("filepath")
+			// Remove leading slash if present
+			filepath = strings.TrimPrefix(filepath, "/")
+
+			// Read file from embedded FS
+			data, err := staticFS.ReadFile("static/" + filepath)
+			if err != nil {
+				c.String(http.StatusNotFound, "File not found")
+				return
+			}
+
+			// Determine content type based on file extension
+			contentType := "application/octet-stream"
+			if strings.HasSuffix(filepath, ".html") {
+				contentType = "text/html; charset=utf-8"
+			} else if strings.HasSuffix(filepath, ".css") {
+				contentType = "text/css; charset=utf-8"
+			} else if strings.HasSuffix(filepath, ".js") {
+				contentType = "application/javascript; charset=utf-8"
+			}
+
+			c.Data(http.StatusOK, contentType, data)
+		})
 	}
 
 	// Health check endpoint (no auth required)

@@ -79,7 +79,7 @@ func runAnonymize(cmd *cobra.Command, args []string) error {
 	entityTypes := anonymizeEntityTypes
 
 	// Initialize LLM
-	cli.ProgressMessage("Initializing LLM client...")
+	cli.ProgressMessage("=== Initializing LLM client... ===")
 	llm, err := anonymizer.CreateOpenAIChatModel(ctx)
 	if err != nil {
 		return err
@@ -119,13 +119,13 @@ func runAnonymize(cmd *cobra.Command, args []string) error {
 	}
 
 	// Anonymize text with streaming
-	cli.ProgressMessage("Anonymizing text...")
+	cli.ProgressMessage("=== Anonymizing text... ===")
 	entities, err := anon.AnonymizeTextStream(ctx, entityTypes, input, writer)
 	if err != nil {
 		return err
 	}
 
-	cli.ProgressMessage("Anonymization complete")
+	cli.ProgressMessage("=== Anonymization complete ===")
 	// Output entities to stderr
 	cli.WriteEntitiesToStderr(entities, anonymizeNoPrint)
 

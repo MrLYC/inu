@@ -454,7 +454,7 @@ UI状态:
 ```
 
 ### Requirement: 静态资源嵌入式服务
-系统 SHALL 使用嵌入的文件系统提供 Web UI 静态资源，无需依赖外部文件。
+系统 SHALL 使用嵌入的文件系统提供 Web UI 静态资源，无需依赖外部文件。实现应避免路由冲突和重定向循环。
 
 #### Scenario: 访问首页从嵌入资源加载
 - **GIVEN** Web 服务器正在运行
@@ -492,6 +492,41 @@ UI状态:
 - **AND** 支持 ETag 或 Last-Modified 进行缓存验证
 - **AND** 客户端可以通过 If-None-Match 或 If-Modified-Since 实现条件请求
 
+#### Scenario: 访问首页不产生重定向循环
+- **GIVEN** Web 服务器正在运行
+- **AND** 静态资源已通过 embed 嵌入
+- **WHEN** 客户端发送 `GET /` 请求
+- **THEN** 服务器应该直接返回 200 OK 和 `index.html` 内容
+- **AND** 不应该发送任何 301 或 302 重定向
+- **AND** 响应头应该包含 `Content-Type: text/html`
+
+#### Scenario: 访问静态资源路径不产生重定向
+- **GIVEN** Web 服务器正在运行
+- **WHEN** 客户端请求 `GET /static/app.js`
+- **THEN** 服务器应该直接返回 200 OK 和 JavaScript 内容
+- **AND** 不应该发送 301 重定向到 `/static/app.js/` 或其他路径
+- **AND** Content-Type 应该是 `application/javascript` 或 `text/javascript`
+
+#### Scenario: 访问 /static 前缀路径（无尾部斜杠）
+- **WHEN** 客户端请求 `GET /static` （不带尾部斜杠）
+- **THEN** 服务器可以返回 404 Not Found 或重定向到 `/static/`
+- **AND** 如果重定向，应该是 301 Moved Permanently 到 `/static/`
+- **AND** 重定向不应该形成循环（即 `/static/` 不应再次重定向）
+
+#### Scenario: 静态文件路由与 API 路由不冲突
+- **GIVEN** 系统同时提供静态资源和 API 端点
+- **WHEN** 客户端请求 `/api/v1/anonymize`
+- **THEN** 请求应该路由到 API 处理器，而不是静态文件处理器
+- **AND** 返回 JSON 响应，而非 HTML 或 404
+
+#### Scenario: 使用标准 HTTP 文件服务器特性
+- **WHEN** 客户端请求静态资源
+- **THEN** 响应应该包含标准的文件服务器特性：
+  - `Content-Type` 根据文件扩展名正确设置
+  - `ETag` 或 `Last-Modified` 用于缓存验证
+  - 支持 `If-None-Match` / `If-Modified-Since` 条件请求
+  - 支持 `Range` 请求（部分内容）
+
 ### Requirement: 嵌入资源版本绑定
 系统 SHALL 确保静态资源版本与二进制文件版本完全一致。
 
@@ -516,6 +551,30 @@ UI状态:
 - **WHEN** 分别启动两个服务器（不同端口）
 - **THEN** 每个服务器应该使用其编译时嵌入的静态资源版本
 - **AND** 两个服务器的 UI 不会互相干扰
+
+### Requirement: 静态文件路由实现规范
+系统 SHALL 使用直接读取文件内容的方式或 `http.FileServer` 等效机制来服务嵌入的静态资源，确保路由行为符合标准 HTTP 语义。
+
+#### Scenario: 直接读取并返回静态资源
+- **GIVEN** 静态资源嵌入在 `embed.FS` 中
+- **WHEN** 系统初始化静态文件路由
+- **THEN** 应该使用 `embed.FS.ReadFile` 直接读取文件内容或使用 `http.FileServer` 等效机制
+- **AND** 应该正确设置 Content-Type 响应头（基于文件扩展名）
+- **AND** 避免使用可能导致自动重定向的框架方法
+
+#### Scenario: 路径前缀正确映射
+- **GIVEN** 静态资源位于嵌入的 `static/` 目录
+- **WHEN** 客户端请求 `/static/app.js`
+- **THEN** 服务器应该从嵌入的文件系统中读取 `static/app.js`
+- **AND** 路径映射应该透明且一致
+- **AND** 不应产生意外的重定向
+
+#### Scenario: 认证中间件正确应用
+- **GIVEN** Web UI 启用了 Basic Auth
+- **WHEN** 客户端请求静态资源 `/static/app.js` 不带认证头
+- **THEN** 服务器应该返回 401 Unauthorized
+- **WHEN** 客户端提供正确的认证信息
+- **THEN** 服务器应该返回 200 OK 和文件内容
 
 ### Requirement: 还原视图
 UI SHALL 提供还原视图,显示实体映射,包含只读的脱敏文本、可编辑的输入区域和还原按钮。

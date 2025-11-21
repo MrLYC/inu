@@ -1,10 +1,31 @@
 package web
 
 import (
+	"context"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/mrlyc/inu/pkg/anonymizer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+// mockAnonymizer is a simple mock for testing web routes
+type mockAnonymizer struct{}
+
+func (m *mockAnonymizer) AnonymizeText(ctx context.Context, types []string, text string) (string, []*anonymizer.Entity, error) {
+	return text, nil, nil
+}
+
+func (m *mockAnonymizer) AnonymizeTextStream(ctx context.Context, types []string, text string, writer io.Writer) ([]*anonymizer.Entity, error) {
+	return nil, nil
+}
+
+func (m *mockAnonymizer) RestoreText(ctx context.Context, entities []*anonymizer.Entity, text string) (string, error) {
+	return text, nil
+}
 
 // TestStaticFilesEmbedded verifies that static files are properly embedded
 func TestStaticFilesEmbedded(t *testing.T) {
@@ -46,4 +67,96 @@ func TestStaticFilesContent(t *testing.T) {
 	jsData, err := staticFS.ReadFile("static/app.js")
 	assert.NoError(t, err)
 	assert.Contains(t, string(jsData), "function", "app.js should contain JavaScript functions")
+}
+
+// TestStaticRoutes tests the static file routing behavior
+func TestStaticRoutes(t *testing.T) {
+	// Create a mock anonymizer
+	mockAnon := &mockAnonymizer{}
+
+	// Create server config without authentication for easier testing
+	config := &Config{
+		Addr:       "127.0.0.1:8080",
+		AdminUser:  "",
+		AdminToken: "",
+	}
+
+	server, err := NewServer(mockAnon, config)
+	require.NoError(t, err, "Should create server successfully")
+
+	tests := []struct {
+		name           string
+		path           string
+		expectedStatus int
+		contentCheck   func(t *testing.T, body string)
+	}{
+		{
+			name:           "GET /static/app.js returns 200",
+			path:           "/static/app.js",
+			expectedStatus: http.StatusOK,
+			contentCheck: func(t *testing.T, body string) {
+				assert.Contains(t, body, "function", "Should return JavaScript content")
+			},
+		},
+		{
+			name:           "GET /static/styles.css returns 200",
+			path:           "/static/styles.css",
+			expectedStatus: http.StatusOK,
+			contentCheck: func(t *testing.T, body string) {
+				assert.Contains(t, body, "body", "Should return CSS content")
+			},
+		},
+		{
+			name:           "GET /static/index.html returns 200",
+			path:           "/static/index.html",
+			expectedStatus: http.StatusOK,
+			contentCheck: func(t *testing.T, body string) {
+				assert.Contains(t, body, "<!DOCTYPE html>", "Should return HTML content")
+			},
+		},
+		{
+			name:           "GET /static/nonexistent.js returns 404",
+			path:           "/static/nonexistent.js",
+			expectedStatus: http.StatusNotFound,
+			contentCheck:   nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest("GET", tt.path, nil)
+			w := httptest.NewRecorder()
+
+			server.engine.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code, "Should return expected status code")
+
+			if tt.contentCheck != nil {
+				tt.contentCheck(t, w.Body.String())
+			}
+		})
+	}
+}
+
+// TestHomePageRoute tests that the home page route works correctly
+func TestHomePageRoute(t *testing.T) {
+	mockAnon := &mockAnonymizer{}
+
+	config := &Config{
+		Addr:       "127.0.0.1:8080",
+		AdminUser:  "",
+		AdminToken: "",
+	}
+
+	server, err := NewServer(mockAnon, config)
+	require.NoError(t, err, "Should create server successfully")
+
+	req := httptest.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+
+	server.engine.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code, "Should return 200 OK")
+	assert.Contains(t, w.Body.String(), "<!DOCTYPE html>", "Should return index.html")
+	assert.Contains(t, w.Body.String(), "Inu", "Should contain app name")
 }

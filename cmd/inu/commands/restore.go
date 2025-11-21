@@ -76,7 +76,7 @@ func runRestore(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load entities
-	cli.ProgressMessage("Loading entities from: %s", restoreEntities)
+	cli.ProgressMessage("=== Loading entities from: %s ===", restoreEntities)
 	entities, err := cli.LoadEntitiesFromYAML(restoreEntities)
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func runRestore(cmd *cobra.Command, args []string) error {
 	}
 
 	// Restore text
-	cli.ProgressMessage("Restoring text...")
+	cli.ProgressMessage("=== Restoring text... ===")
 	result, err := anon.RestoreText(ctx, entities, input)
 	if err != nil {
 		return err
@@ -105,6 +105,6 @@ func runRestore(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cli.ProgressMessage("Restoration complete")
+	cli.ProgressMessage("=== Restoration complete ===")
 	return nil
 }
