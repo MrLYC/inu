@@ -2,7 +2,9 @@ package web
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"time"
@@ -12,6 +14,9 @@ import (
 	"github.com/mrlyc/inu/pkg/web/handlers"
 	"github.com/mrlyc/inu/pkg/web/middleware"
 )
+
+//go:embed static/*
+var staticFS embed.FS
 
 const version = "v0.1.0"
 
@@ -58,6 +63,13 @@ func (s *Server) SetEntityTypes(types []string) {
 
 // setupRoutes configures all HTTP routes and middleware
 func (s *Server) setupRoutes() {
+	// Create embedded static file system
+	staticSubFS, err := fs.Sub(staticFS, "static")
+	if err != nil {
+		log.Fatalf("Failed to create static filesystem: %v", err)
+	}
+	httpFS := http.FS(staticSubFS)
+
 	// Determine if auth is enabled
 	authEnabled := s.config.IsAuthEnabled()
 
@@ -68,9 +80,9 @@ func (s *Server) setupRoutes() {
 	}
 	{
 		ui.GET("/", func(c *gin.Context) {
-			c.File("pkg/web/static/index.html")
+			c.FileFromFS("index.html", httpFS)
 		})
-		ui.Static("/static", "pkg/web/static")
+		ui.StaticFS("/static", httpFS)
 	}
 
 	// Health check endpoint (no auth required)

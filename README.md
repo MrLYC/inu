@@ -19,7 +19,9 @@
 
 ### 从 Release 下载
 
-从 [GitHub Releases](https://github.com/MrLYC/inu/releases) 下载适合你平台的预编译二进制文件：
+从 [GitHub Releases](https://github.com/MrLYC/inu/releases) 下载适合你平台的预编译二进制文件。
+
+**单文件分发**：二进制文件已包含完整的 Web UI，无需额外的静态文件或配置，下载即可使用。
 
 **Linux (amd64)**
 ```bash
@@ -297,6 +299,11 @@ inu web --addr 0.0.0.0:9090 \
 ```
 
 服务器启动后，可以通过 Web 界面或 HTTP API 进行脱敏和还原操作。
+
+**部署说明**：
+- 二进制文件包含完整的 Web UI，无需部署额外的静态文件
+- 可以将单个二进制文件复制到任何目录直接运行
+- 适合容器化部署和离线环境
 
 #### Web 界面
 

@@ -35,10 +35,12 @@ Inu 是一个基于 AI 大模型的文本敏感信息脱敏工具。它能够识
   - `pkg/anonymizer/`: 核心业务逻辑
   - `pkg/cli/`: CLI 工具函数（输入输出、实体管理）
   - `pkg/web/`: Web API 服务器（handlers, middleware, server）
+  - `pkg/web/static/`: Web UI 静态资源（开发时使用，编译时嵌入）
   - `bin/`: 编译产物输出目录（不提交到版本控制）
   - `openspec/`: OpenSpec 规范和变更提案
 - **CLI 架构**: 使用 Cobra 构建子命令结构，Viper 处理配置文件
 - **Web 架构**: 使用 Gin 框架提供 RESTful API，支持 HTTP Basic Auth
+- **静态资源嵌入**: 使用 Go embed 包在编译时将 Web UI 静态文件打包进二进制，实现单文件分发
 - **依赖注入**: 构造函数模式（如 `NewHas`）
 - **错误处理**: 统一使用 eris 进行错误包装和追踪
 
@@ -85,6 +87,7 @@ Inu 是一个基于 AI 大模型的文本敏感信息脱敏工具。它能够识
   - 输出：`--print` 和/或 `--output`
 - `inu web`: 启动 Web API 服务器
   - 配置：`--addr` (监听地址), `--admin-user`, `--admin-token`
+  - 部署：二进制文件已包含 Web UI，无需额外静态文件
   - API 端点：
     - `GET /health` - 健康检查（无需认证）
     - `POST /api/v1/anonymize` - 脱敏文本（需要认证）
