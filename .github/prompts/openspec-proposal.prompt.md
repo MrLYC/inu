@@ -24,3 +24,4 @@ $ARGUMENTS
 - Search existing requirements with `rg -n "Requirement:|Scenario:" openspec/specs` before writing new ones.
 - Explore the codebase with `rg <keyword>`, `ls`, or direct file reads so proposals align with current implementation realities.
 <!-- OPENSPEC:END -->
+使用中文

@@ -1,46 +1,78 @@
-# Proposal: Add Interactive Web UI
+# 提案: 添加交互式 Web 界面
 
-## Why
+## 为什么
 
-Currently, `inu web` provides only a RESTful API without a user interface. Users must interact with the anonymization service through API clients like curl or Postman. The `inu interactive` command offers a better workflow with entity memory across multiple restoration cycles, but it's limited to CLI environments.
+目前 `inu web` 仅提供 RESTful API，没有用户界面。用户必须通过 curl 或 Postman 等 API 客户端与匿名化服务交互。`inu interactive` 命令提供了更好的工作流程，具有跨多个还原周期的实体内存，但仅限于 CLI 环境。
 
-**Problems:**
-- Web mode lacks visual interface, limiting accessibility
-- Users unfamiliar with APIs cannot easily use the web service
-- Interactive workflow (anonymize once, restore multiple times) is unavailable in web mode
-- No visual feedback for entity mappings during restoration
+**问题:**
+- Web 模式缺少可视化界面，限制了可访问性
+- 不熟悉 API 的用户无法轻松使用 Web 服务
+- 交互式工作流（一次匿名化，多次还原）在 Web 模式下不可用
+- 还原过程中缺少实体映射的可视化反馈
 
-## What
+## 做什么
 
-Add a single-page web UI to `inu web` that replicates the interactive command workflow in a browser interface.
+为 `inu web` 添加单页 Web 界面，在浏览器界面中复制交互式命令工作流。
 
-**Core Features:**
+**核心功能:**
 
-1. **Anonymize View**
-   - Entity type selector (populated from `--entity-types` flag + custom input)
-   - Input textarea for text to anonymize
-   - Output panel showing anonymized result
-   - "Anonymize" button with loading state
-   - "Switch to Restore Mode" button (appears after anonymization)
+1. **匿名化视图**
+   - 实体类型选择器（从 `--entity-types` 参数填充 + 自定义输入）
+   - 用于输入待匿名化文本的文本区域
+   - 显示匿名化结果的输出面板
+   - 带加载状态的"匿名化"按钮
+   - "切换到还原模式"按钮（匿名化后出现）
 
-2. **Restore View**
-   - Entity mapping display (shows placeholder → original value pairs)
-   - Read-only anonymized text panel (left)
-   - Editable input textarea (right) for external processing results
-   - "Restore" button to de-anonymize current text
-   - "Back to Anonymize" button to return to first view
+2. **还原视图**
+   - 实体映射显示（显示占位符 → 原始值对）
+   - 只读的匿名化文本面板（左侧）
+   - 可编辑的输入文本区域（右侧）用于外部处理结果
+   - "还原"按钮用于反匿名化当前文本
+   - "返回匿名化"按钮返回第一个视图
 
-3. **State Management**
-   - Client-side storage of entities using sessionStorage
-   - Entities persist across view switches within same browser session
-   - No server-side session required (stateless API design)
+3. **状态管理**
+   - 使用 sessionStorage 进行实体的客户端存储
+   - 实体在同一浏览器会话的视图切换中持久化
+   - 无需服务器端会话（无状态 API 设计）
 
-**Implementation:**
-- Vanilla HTML/CSS/JavaScript (no framework dependencies)
-- Static files served by Gin's static file handler
-- Reuses existing `/api/v1/anonymize` and `/api/v1/restore` endpoints
-- New route: `GET /` serves UI homepage (no authentication required)
-- New route: `GET /api/v1/config` provides entity types configuration (optional)
+**实现方式:**
+- 原生 HTML/CSS/JavaScript（无框架依赖）
+- 通过 Gin 的静态文件处理器提供静态文件
+- 复用现有的 `/api/v1/anonymize` 和 `/api/v1/restore` 端点
+- 新路由: `GET /` 提供 UI 主页（无需认证）
+- 新路由: `GET /api/v1/config` 提供实体类型配置（可选）
+
+## 影响
+
+**规范:**
+- **web-api**: 为 UI 路由、静态文件服务和前端功能添加了 ADDED 要求
+
+**代码:**
+- `pkg/web/server.go`: 添加 `GET /` 路由和静态文件处理器
+- `pkg/web/static/`: 用于 HTML/CSS/JS 文件的新目录
+- `cmd/inu/commands/web.go`: 无需更改（实体类型已可配置）
+
+**依赖项:**
+- 无（原生 JS，无新的 Go 依赖）
+
+**破坏性变更:**
+- 无（API 端点保持不变）
+
+**文档:**
+- 使用 Web UI 更新 README
+- 添加 Web 界面截图
+
+## 考虑的替代方案
+
+1. **React/Vue SPA**: 更复杂，需要构建工具，对于简单 UI 来说过于复杂
+2. **服务器渲染模板**: 需要服务器端状态管理，破坏无状态 API 设计
+3. **独立的 UI 服务器**: 额外的部署复杂性，对于单团队项目来说不必要
+
+## 待解决问题
+
+1. UI 路由是否需要认证？（建议：GET / 无需认证，保持 API 认证）
+2. 实体类型是否应该在运行时可配置？（建议：v1 仅支持 CLI 参数）
+3. 是否应该支持多个并发会话？（建议：不需要，客户端状态足够）
 
 ## Impact
 

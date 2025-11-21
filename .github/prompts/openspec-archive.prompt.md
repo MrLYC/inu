@@ -24,3 +24,4 @@ $ARGUMENTS
 - Use `openspec list` to confirm change IDs before archiving.
 - Inspect refreshed specs with `openspec list --specs` and address any validation issues before handing off.
 <!-- OPENSPEC:END -->
+使用中文
