@@ -42,6 +42,7 @@ func main() {
 	// Add subcommands
 	rootCmd.AddCommand(commands.NewAnonymizeCmd())
 	rootCmd.AddCommand(commands.NewRestoreCmd())
+	rootCmd.AddCommand(commands.NewInteractiveCmd())
 	rootCmd.AddCommand(commands.NewWebCmd())
 
 	if err := rootCmd.Execute(); err != nil {
