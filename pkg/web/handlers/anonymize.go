@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +13,7 @@ import (
 
 // Anonymizer defines the interface for anonymization operations
 type Anonymizer interface {
-	AnonymizeText(ctx context.Context, types []string, text string) (string, []*anonymizer.Entity, error)
+	Anonymize(ctx context.Context, types []string, text string, writer io.Writer) ([]*anonymizer.Entity, error)
 }
 
 // AnonymizeRequest represents the request body for anonymization
@@ -56,7 +58,8 @@ func AnonymizeHandler(anon Anonymizer) gin.HandlerFunc {
 		}
 
 		// Call anonymizer
-		anonymizedText, entities, err := anon.AnonymizeText(c.Request.Context(), entityTypes, req.Text)
+		var buf bytes.Buffer
+		entities, err := anon.Anonymize(c.Request.Context(), entityTypes, req.Text, &buf)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "llm_error",
@@ -68,7 +71,7 @@ func AnonymizeHandler(anon Anonymizer) gin.HandlerFunc {
 
 		// Return successful response
 		c.JSON(http.StatusOK, AnonymizeResponse{
-			AnonymizedText: anonymizedText,
+			AnonymizedText: buf.String(),
 			Entities:       entities,
 		})
 	}

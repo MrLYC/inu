@@ -170,13 +170,11 @@ func TestAnonymizeText_EmptyText(t *testing.T) {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
 
-	var buf bytes.Buffer
-	entities, err := anon.Anonymize(ctx, []string{"个人信息"}, "", &buf)
+	result, entities, err := anon.AnonymizeText(ctx, []string{"个人信息"}, "")
 	if err != nil {
 		t.Fatalf("AnonymizeText failed: %v", err)
 	}
 
-	result := buf.String()
 	if result != "" {
 		t.Errorf("Expected empty result, got: %s", result)
 	}
@@ -200,13 +198,11 @@ func TestAnonymizeText_NoMatch(t *testing.T) {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
 
-	var buf bytes.Buffer
-	entities, err := anon.Anonymize(ctx, []string{"个人信息"}, originalText, &buf)
+	result, entities, err := anon.AnonymizeText(ctx, []string{"个人信息"}, originalText)
 	if err != nil {
 		t.Fatalf("AnonymizeText failed: %v", err)
 	}
 
-	result := buf.String()
 	if result != originalText {
 		t.Errorf("Expected original text, got: %s", result)
 	}
@@ -226,8 +222,7 @@ func TestAnonymizeText_LLMError(t *testing.T) {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
 
-	var buf bytes.Buffer
-	_, err = anon.Anonymize(ctx, []string{"个人信息"}, "张三", &buf)
+	_, _, err = anon.AnonymizeText(ctx, []string{"个人信息"}, "张三")
 	if err == nil {
 		t.Error("Expected error when LLM fails, got nil")
 	}
@@ -247,8 +242,7 @@ func TestAnonymizeText_InvalidResponseFormat(t *testing.T) {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
 
-	var buf bytes.Buffer
-	_, err = anon.Anonymize(ctx, []string{"个人信息"}, "张三", &buf)
+	_, _, err = anon.AnonymizeText(ctx, []string{"个人信息"}, "张三")
 	if err == nil {
 		t.Error("Expected error for invalid response format, got nil")
 	}
@@ -267,8 +261,7 @@ func TestAnonymizeText_InvalidJSON(t *testing.T) {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
 
-	var buf bytes.Buffer
-	_, err = anon.Anonymize(ctx, []string{"个人信息"}, "张三", &buf)
+	_, _, err = anon.AnonymizeText(ctx, []string{"个人信息"}, "张三")
 	if err == nil {
 		t.Error("Expected error for invalid JSON, got nil")
 	}
@@ -289,8 +282,7 @@ func TestAnonymizeText_InvalidKeyFormat(t *testing.T) {
 		t.Fatalf("Failed to create anonymizer: %v", err)
 	}
 
-	var buf bytes.Buffer
-	_, err = anon.Anonymize(ctx, []string{"个人信息"}, "text", &buf)
+	_, _, err = anon.AnonymizeText(ctx, []string{"个人信息"}, "text")
 	if err == nil {
 		t.Error("Expected error for invalid key format, got nil")
 	}
@@ -318,20 +310,14 @@ func TestRestoreText_SingleEntity(t *testing.T) {
 	}
 
 	anonymizedText := "<个人信息[0].姓名.全名> lives in Beijing"
-	var buf bytes.Buffer
-	failures, err := anon.RestoreText(ctx, entities, anonymizedText, &buf)
+	result, err := anon.RestoreText(ctx, entities, anonymizedText)
 	if err != nil {
 		t.Fatalf("RestoreText failed: %v", err)
 	}
 
 	expected := "张三 lives in Beijing"
-	result := buf.String()
 	if result != expected {
 		t.Errorf("Expected %q, got %q", expected, result)
-	}
-
-	if len(failures) != 0 {
-		t.Errorf("Expected no failures, got %d", len(failures))
 	}
 }
 
@@ -357,20 +343,14 @@ func TestRestoreText_MultipleEntities(t *testing.T) {
 	}
 
 	anonymizedText := "<个人信息[0].姓名.全名>'s phone is <个人信息[1].电话.号码>"
-	var buf bytes.Buffer
-	failures, err := anon.RestoreText(ctx, entities, anonymizedText, &buf)
+	result, err := anon.RestoreText(ctx, entities, anonymizedText)
 	if err != nil {
 		t.Fatalf("RestoreText failed: %v", err)
 	}
 
 	expected := "张三's phone is 13800138000"
-	result := buf.String()
 	if result != expected {
 		t.Errorf("Expected %q, got %q", expected, result)
-	}
-
-	if len(failures) != 0 {
-		t.Errorf("Expected no failures, got %d", len(failures))
 	}
 }
 
@@ -388,19 +368,13 @@ func TestRestoreText_EmptyText(t *testing.T) {
 		{Key: "<个人信息[0].姓名.全名>", Values: []string{"张三"}},
 	}
 
-	var buf bytes.Buffer
-	failures, err := anon.RestoreText(ctx, entities, "", &buf)
+	result, err := anon.RestoreText(ctx, entities, "")
 	if err != nil {
 		t.Fatalf("RestoreText failed: %v", err)
 	}
 
-	result := buf.String()
 	if result != "" {
 		t.Errorf("Expected empty string, got %q", result)
-	}
-
-	if len(failures) != 0 {
-		t.Errorf("Expected no failures, got %d", len(failures))
 	}
 }
 
@@ -415,19 +389,13 @@ func TestRestoreText_EmptyEntities(t *testing.T) {
 	}
 
 	originalText := "Some text without placeholders"
-	var buf bytes.Buffer
-	failures, err := anon.RestoreText(ctx, []*Entity{}, originalText, &buf)
+	result, err := anon.RestoreText(ctx, []*Entity{}, originalText)
 	if err != nil {
 		t.Fatalf("RestoreText failed: %v", err)
 	}
 
-	result := buf.String()
 	if result != originalText {
 		t.Errorf("Expected original text, got %q", result)
-	}
-
-	if len(failures) != 0 {
-		t.Errorf("Expected no failures, got %d", len(failures))
 	}
 }
 
@@ -446,19 +414,13 @@ func TestRestoreText_NoPlaceholders(t *testing.T) {
 	}
 
 	originalText := "This text has no placeholders"
-	var buf bytes.Buffer
-	failures, err := anon.RestoreText(ctx, entities, originalText, &buf)
+	result, err := anon.RestoreText(ctx, entities, originalText)
 	if err != nil {
 		t.Fatalf("RestoreText failed: %v", err)
 	}
 
-	result := buf.String()
 	if result != originalText {
 		t.Errorf("Expected original text, got %q", result)
-	}
-
-	if len(failures) != 0 {
-		t.Errorf("Expected no failures, got %d", len(failures))
 	}
 }
 
@@ -478,29 +440,15 @@ func TestRestoreText_EntityNoValues(t *testing.T) {
 	}
 
 	anonymizedText := "<个人信息[0].姓名.全名> <个人信息[1].电话.号码>"
-	var buf bytes.Buffer
-	failures, err := anon.RestoreText(ctx, entities, anonymizedText, &buf)
+	result, err := anon.RestoreText(ctx, entities, anonymizedText)
 	if err != nil {
 		t.Fatalf("RestoreText failed: %v", err)
 	}
 
 	// First entity should not be replaced, second should
 	expected := "<个人信息[0].姓名.全名> 13800138000"
-	result := buf.String()
 	if result != expected {
 		t.Errorf("Expected %q, got %q", expected, result)
-	}
-
-	// Should have one failure for the empty entity
-	if len(failures) != 1 {
-		t.Errorf("Expected 1 failure, got %d", len(failures))
-	} else {
-		if failures[0].Placeholder != "<个人信息[0].姓名.全名>" {
-			t.Errorf("Expected placeholder '<个人信息[0].姓名.全名>', got %q", failures[0].Placeholder)
-		}
-		if failures[0].Reason != "empty_values" {
-			t.Errorf("Expected reason 'empty_values', got %q", failures[0].Reason)
-		}
 	}
 }
 
@@ -524,28 +472,20 @@ func TestAnonymizeAndRestore_RoundTrip(t *testing.T) {
 	}
 
 	// Anonymize
-	var anonBuf bytes.Buffer
-	entities, err := anon.Anonymize(ctx, []string{"个人信息"}, originalText, &anonBuf)
+	anonymizedText, entities, err := anon.AnonymizeText(ctx, []string{"个人信息"}, originalText)
 	if err != nil {
 		t.Fatalf("AnonymizeText failed: %v", err)
 	}
-	anonymizedText := anonBuf.String()
 
 	// Restore
-	var restoreBuf bytes.Buffer
-	failures, err := anon.RestoreText(ctx, entities, anonymizedText, &restoreBuf)
+	restoredText, err := anon.RestoreText(ctx, entities, anonymizedText)
 	if err != nil {
 		t.Fatalf("RestoreText failed: %v", err)
 	}
 
 	// Verify round-trip
-	restoredText := restoreBuf.String()
 	if restoredText != originalText {
 		t.Errorf("Round-trip failed: expected %q, got %q", originalText, restoredText)
-	}
-
-	if len(failures) != 0 {
-		t.Errorf("Expected no failures, got %d", len(failures))
 	}
 }
 
@@ -715,18 +655,12 @@ func TestRestoreText_FormatCompatibility(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var buf bytes.Buffer
-			failures, err := anon.RestoreText(ctx, entities, tt.input, &buf)
+			result, err := anon.RestoreText(ctx, entities, tt.input)
 			if err != nil {
 				t.Fatalf("RestoreText failed: %v", err)
 			}
-			result := buf.String()
 			if result != tt.expected {
 				t.Errorf("RestoreText(%q) = %q, expected %q", tt.input, result, tt.expected)
-			}
-			// These tests expect successful restoration (no failures for known placeholders)
-			if tt.name != "Partial match - unknown placeholder preserved" && len(failures) != 0 {
-				t.Errorf("Expected no failures for %q, got %d", tt.name, len(failures))
 			}
 		})
 	}
@@ -757,18 +691,12 @@ func TestRestoreText_FullwidthNumbers(t *testing.T) {
 	input := "<　账户信息　[　０　].　银行账户　.　６２２２０２１００１１２３４５６７８９　>"
 	expected := "6222021001123456789"
 
-	var buf bytes.Buffer
-	failures, err := anon.RestoreText(ctx, entities, input, &buf)
+	result, err := anon.RestoreText(ctx, entities, input)
 	if err != nil {
 		t.Fatalf("RestoreText failed: %v", err)
 	}
 
-	result := buf.String()
 	if result != expected {
 		t.Errorf("RestoreText with fullwidth numbers failed: got %q, expected %q", result, expected)
-	}
-
-	if len(failures) != 0 {
-		t.Errorf("Expected no failures, got %d", len(failures))
 	}
 }

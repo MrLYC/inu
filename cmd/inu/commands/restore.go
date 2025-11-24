@@ -18,6 +18,8 @@ package commands
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"os"
 
 	"github.com/rotisserie/eris"
@@ -96,14 +98,53 @@ func runRestore(cmd *cobra.Command, args []string) error {
 
 	// Restore text
 	cli.ProgressMessage("=== Restoring text... ===")
-	result, err := anon.RestoreText(ctx, entities, input)
+
+	// Create writer for output
+	var writer io.Writer
+	if restoreOutput != "" {
+		// Create output file
+		fileWriter, err := os.Create(restoreOutput)
+		if err != nil {
+			return eris.Wrapf(err, "failed to create output file: %s", restoreOutput)
+		}
+		defer func() {
+			if err := fileWriter.Close(); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to close file: %v\n", err)
+			}
+		}()
+
+		if restoreNoPrint {
+			// Only write to file
+			writer = fileWriter
+		} else {
+			// Write to both file and stdout
+			writer = io.MultiWriter(os.Stdout, fileWriter)
+		}
+	} else if restoreNoPrint {
+		// No output
+		writer = io.Discard
+	} else {
+		// Only stdout
+		writer = os.Stdout
+	}
+
+	failures, err := anon.RestoreText(ctx, entities, input, writer)
 	if err != nil {
 		return err
 	}
 
-	// Output restored text
-	if err := cli.WriteOutput(result, restoreNoPrint, restoreOutput); err != nil {
-		return err
+	// Display warnings for failed placeholders
+	if len(failures) > 0 {
+		fmt.Fprintf(os.Stderr, "\nWarning: %d placeholder(s) could not be restored:\n", len(failures))
+		for _, failure := range failures {
+			var reasonMsg string
+			if failure.Reason == "empty_values" {
+				reasonMsg = "(entity has no values)"
+			} else {
+				reasonMsg = "(not found in entities file)"
+			}
+			fmt.Fprintf(os.Stderr, "  - %s %s\n", failure.Placeholder, reasonMsg)
+		}
 	}
 
 	cli.ProgressMessage("=== Restoration complete ===")

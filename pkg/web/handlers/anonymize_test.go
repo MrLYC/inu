@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,8 +19,9 @@ func TestAnonymizeHandler_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	mockAnon := &mockAnonymizer{
-		anonymizeFunc: func(ctx context.Context, types []string, text string) (string, []*anonymizer.Entity, error) {
-			return "<个人信息[0].姓名.全名>", []*anonymizer.Entity{
+		anonymizeFunc: func(ctx context.Context, types []string, text string, writer io.Writer) ([]*anonymizer.Entity, error) {
+			writer.Write([]byte("<个人信息[0].姓名.全名>"))
+			return []*anonymizer.Entity{
 				{
 					Key:        "<个人信息[0].姓名.全名>",
 					EntityType: "个人信息",
@@ -118,8 +120,8 @@ func TestAnonymizeHandler_LLMError(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	mockAnon := &mockAnonymizer{
-		anonymizeFunc: func(ctx context.Context, types []string, text string) (string, []*anonymizer.Entity, error) {
-			return "", nil, fmt.Errorf("LLM API error")
+		anonymizeFunc: func(ctx context.Context, types []string, text string, writer io.Writer) ([]*anonymizer.Entity, error) {
+			return nil, fmt.Errorf("LLM API error")
 		},
 	}
 
@@ -156,9 +158,10 @@ func TestAnonymizeHandler_DefaultEntityTypes(t *testing.T) {
 
 	var receivedTypes []string
 	mockAnon := &mockAnonymizer{
-		anonymizeFunc: func(ctx context.Context, types []string, text string) (string, []*anonymizer.Entity, error) {
+		anonymizeFunc: func(ctx context.Context, types []string, text string, writer io.Writer) ([]*anonymizer.Entity, error) {
 			receivedTypes = types
-			return "anonymized", []*anonymizer.Entity{}, nil
+			writer.Write([]byte("anonymized"))
+			return []*anonymizer.Entity{}, nil
 		},
 	}
 
@@ -192,9 +195,10 @@ func TestAnonymizeHandler_CustomEntityTypes(t *testing.T) {
 
 	var receivedTypes []string
 	mockAnon := &mockAnonymizer{
-		anonymizeFunc: func(ctx context.Context, types []string, text string) (string, []*anonymizer.Entity, error) {
+		anonymizeFunc: func(ctx context.Context, types []string, text string, writer io.Writer) ([]*anonymizer.Entity, error) {
 			receivedTypes = types
-			return "anonymized", []*anonymizer.Entity{}, nil
+			writer.Write([]byte("anonymized"))
+			return []*anonymizer.Entity{}, nil
 		},
 	}
 

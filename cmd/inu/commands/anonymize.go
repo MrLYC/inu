@@ -130,7 +130,7 @@ func runAnonymize(cmd *cobra.Command, args []string) error {
 
 	// Anonymize text with streaming
 	cli.ProgressMessage("=== Anonymizing text... ===")
-	entities, err := anon.AnonymizeTextStream(ctx, entityTypes, input, writer)
+	entities, err := anon.Anonymize(ctx, entityTypes, input, writer)
 	if err != nil {
 		return err
 	}

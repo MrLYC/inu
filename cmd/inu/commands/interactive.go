@@ -103,7 +103,7 @@ func runInteractive(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(os.Stderr, "\n"+strings.Repeat("=", 60))
 	fmt.Fprintln(os.Stderr, "ANONYMIZED TEXT:")
 	fmt.Fprintln(os.Stderr, strings.Repeat("=", 60))
-	entities, err := anon.AnonymizeTextStream(ctx, interactiveEntityTypes, input, os.Stdout)
+	entities, err := anon.Anonymize(ctx, interactiveEntityTypes, input, os.Stdout)
 	if err != nil {
 		return err
 	}
@@ -126,18 +126,30 @@ func runInteractive(cmd *cobra.Command, args []string) error {
 
 		// Restore text using in-memory entities
 		cli.ProgressMessage("Restoring text...")
-		restoredText, err := anon.RestoreText(ctx, entities, processedText)
+		failures, err := anon.RestoreText(ctx, entities, processedText, os.Stdout)
 		if err != nil {
-			// Best-effort restoration - output what we can
-			fmt.Fprintln(os.Stderr, "Warning: Some placeholders could not be restored")
-			restoredText = processedText
+			return err
+		}
+
+		// Display warnings for failed placeholders
+		if len(failures) > 0 {
+			fmt.Fprintf(os.Stderr, "\nWarning: %d placeholder(s) could not be restored:\n", len(failures))
+			for _, failure := range failures {
+				var reasonMsg string
+				if failure.Reason == "empty_values" {
+					reasonMsg = "(entity has no values)"
+				} else {
+					reasonMsg = "(not found in entities file)"
+				}
+				fmt.Fprintf(os.Stderr, "  - %s %s\n", failure.Placeholder, reasonMsg)
+			}
 		}
 
 		// Output restored text to stdout with clear separation
 		fmt.Fprintln(os.Stderr, "\n"+strings.Repeat("=", 60))
 		fmt.Fprintln(os.Stderr, "RESTORED TEXT:")
 		fmt.Fprintln(os.Stderr, strings.Repeat("=", 60))
-		fmt.Println(restoredText)
+		// Note: Restored text was already written to os.Stdout by RestoreText
 		fmt.Fprintln(os.Stderr, strings.Repeat("=", 60))
 
 		// Show ready message for next input

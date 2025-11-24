@@ -16,16 +16,14 @@ import (
 // mockAnonymizer is a simple mock for testing web routes
 type mockAnonymizer struct{}
 
-func (m *mockAnonymizer) AnonymizeText(ctx context.Context, types []string, text string) (string, []*anonymizer.Entity, error) {
-	return text, nil, nil
-}
-
-func (m *mockAnonymizer) AnonymizeTextStream(ctx context.Context, types []string, text string, writer io.Writer) ([]*anonymizer.Entity, error) {
+func (m *mockAnonymizer) Anonymize(ctx context.Context, types []string, text string, writer io.Writer) ([]*anonymizer.Entity, error) {
+	writer.Write([]byte(text))
 	return nil, nil
 }
 
-func (m *mockAnonymizer) RestoreText(ctx context.Context, entities []*anonymizer.Entity, text string) (string, error) {
-	return text, nil
+func (m *mockAnonymizer) RestoreText(ctx context.Context, entities []*anonymizer.Entity, text string, writer io.Writer) ([]anonymizer.RestoreFailure, error) {
+	writer.Write([]byte(text))
+	return nil, nil
 }
 
 // TestStaticFilesEmbedded verifies that static files are properly embedded

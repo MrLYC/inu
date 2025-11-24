@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,8 +19,9 @@ func TestRestoreHandler_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	mockAnon := &mockAnonymizer{
-		restoreFunc: func(ctx context.Context, entities []*anonymizer.Entity, text string) (string, error) {
-			return "张三", nil
+		restoreFunc: func(ctx context.Context, entities []*anonymizer.Entity, text string, writer io.Writer) ([]anonymizer.RestoreFailure, error) {
+			writer.Write([]byte("张三"))
+			return nil, nil
 		},
 	}
 
@@ -112,8 +114,8 @@ func TestRestoreHandler_RestoreError(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	mockAnon := &mockAnonymizer{
-		restoreFunc: func(ctx context.Context, entities []*anonymizer.Entity, text string) (string, error) {
-			return "", fmt.Errorf("restore error")
+		restoreFunc: func(ctx context.Context, entities []*anonymizer.Entity, text string, writer io.Writer) ([]anonymizer.RestoreFailure, error) {
+			return nil, fmt.Errorf("restore error")
 		},
 	}
 
@@ -150,9 +152,10 @@ func TestRestoreHandler_EmptyEntities(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	mockAnon := &mockAnonymizer{
-		restoreFunc: func(ctx context.Context, entities []*anonymizer.Entity, text string) (string, error) {
+		restoreFunc: func(ctx context.Context, entities []*anonymizer.Entity, text string, writer io.Writer) ([]anonymizer.RestoreFailure, error) {
 			// Empty entities should still work, just return original text
-			return text, nil
+			writer.Write([]byte(text))
+			return nil, nil
 		},
 	}
 

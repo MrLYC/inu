@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +13,7 @@ import (
 
 // Restorer defines the interface for restoration operations
 type Restorer interface {
-	RestoreText(ctx context.Context, entities []*anonymizer.Entity, text string) (string, error)
+	RestoreText(ctx context.Context, entities []*anonymizer.Entity, text string, writer io.Writer) ([]anonymizer.RestoreFailure, error)
 }
 
 // RestoreRequest represents the request body for restoration
@@ -22,7 +24,8 @@ type RestoreRequest struct {
 
 // RestoreResponse represents the response body for restoration
 type RestoreResponse struct {
-	RestoredText string `json:"restored_text"`
+	RestoredText           string                      `json:"restored_text"`
+	UnrestoredPlaceholders []anonymizer.RestoreFailure `json:"unrestored_placeholders,omitempty"`
 }
 
 // RestoreHandler returns a handler for the restore endpoint
@@ -49,7 +52,8 @@ func RestoreHandler(anon Restorer) gin.HandlerFunc {
 		}
 
 		// Call anonymizer to restore text
-		restoredText, err := anon.RestoreText(c.Request.Context(), req.Entities, req.AnonymizedText)
+		var buf bytes.Buffer
+		failures, err := anon.RestoreText(c.Request.Context(), req.Entities, req.AnonymizedText, &buf)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "restore_error",
@@ -61,7 +65,8 @@ func RestoreHandler(anon Restorer) gin.HandlerFunc {
 
 		// Return successful response
 		c.JSON(http.StatusOK, RestoreResponse{
-			RestoredText: restoredText,
+			RestoredText:           buf.String(),
+			UnrestoredPlaceholders: failures,
 		})
 	}
 }
